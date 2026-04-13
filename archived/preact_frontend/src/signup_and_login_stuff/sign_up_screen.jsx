@@ -68,23 +68,20 @@ export default function Sign_Up_Screen() {
       return;
     }
 
-    const res = await fetch('https://epstein-clicker-backend.onrender.com/signup', {
+    const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, username, password }),
     });
 
+    const data = await res.json();
+
     if (!res.ok) {
-      const data = await res.json();
       alert(data.detail || 'Sign up failed');
       return;
     }
 
-    on_login({ 
-      username, 
-      email, 
-      password 
-    });
+    on_login(data.user);
   };
 
   useEffect(() => {

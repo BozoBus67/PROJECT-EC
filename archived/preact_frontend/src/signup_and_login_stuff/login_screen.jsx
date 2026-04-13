@@ -1,4 +1,3 @@
-import { supabase } from '../miscellaneous_info/supabase_api_info';
 import { useState, useEffect } from 'preact/hooks';
 import { current_screen } from '../miscellaneous_info/screen_info';
 import { on_login } from './session';
@@ -46,19 +45,20 @@ export default function Login_Screen() {
   const [password, setPassword] = useState('');
 
   const Try_Login = async () => {
-    const { data, error } = await supabase
-      .from('User_Login_Data')
-      .select()
-      .or(`username.eq.${usernameOrEmail},email.eq.${usernameOrEmail}`)
-      .eq('password', password)
-      .single();
+    const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username_or_email: usernameOrEmail, password }),
+    });
 
-    if (error || !data) {
-      alert('Invalid username/email or password');
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.detail || 'Invalid username or password');
       return;
     }
 
-    on_login(data);
+    on_login(data.user);
   };
 
   useEffect(() => {
@@ -82,10 +82,7 @@ export default function Login_Screen() {
     }}>
       <Login_Panel
         Try_Login={Try_Login}
-        fields={{
-          usernameOrEmail, setUsernameOrEmail,
-          password, setPassword,
-        }}
+        fields={{ usernameOrEmail, setUsernameOrEmail, password, setPassword }}
       />
     </div>
   );

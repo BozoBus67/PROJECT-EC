@@ -1,6 +1,6 @@
 import { useState, useRef } from 'preact/hooks';
-import { game_data } from '../../game_data/game_data_loading';
-import { buyBuilding } from '../../game_data/game_data_calculations';
+import { game_data } from '../../game_data/game_state';
+import { buy_building } from '../../utils';
 import { BUILDINGS } from '../../constants/building_constants';
 
 function Building_Tooltip({ building, owned, row_top, row_height }) {
@@ -34,7 +34,7 @@ export function Building_Row({ name }) {
   return (
     <div
       ref={row_ref}
-      onClick={() => buyBuilding(name)}
+      onClick={() => buy_building(name)}
       onMouseEnter={() => { set_hovered(true); set_rect(row_ref.current.getBoundingClientRect()); }}
       onMouseLeave={() => set_hovered(false)}
       style={{ position: 'relative', display: 'flex', alignItems: 'center', border: '1px solid black', padding: '8px', cursor: 'pointer' }}
@@ -42,7 +42,7 @@ export function Building_Row({ name }) {
     >
       {hovered && rect && <Building_Tooltip building={building} owned={owned} row_top={rect.top} row_height={rect.height} />}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-        <span style={{ fontSize: '16px', fontWeight: 'bold' }}>{name}</span>
+        <span style={{ fontSize: '16px', fontWeight: 'bold' }}>{building.display_name}</span>
         <span style={{ fontSize: '12px', color: '#666' }}>Cost: {building.cost}</span>
       </div>
       <span style={{ marginLeft: 'auto', fontSize: '14px' }}>

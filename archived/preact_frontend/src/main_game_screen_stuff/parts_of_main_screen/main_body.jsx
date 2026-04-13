@@ -1,5 +1,5 @@
-import { game_data } from '../../game_data/game_data_loading';
-import { increaseCookies } from '../../game_data/game_data_calculations';
+import { game_data } from '../../game_data/game_state';
+import { increase_cookies } from '../../utils';
 import { Building_Row } from '../buildings/buildings_components';
 import * as Constants from '../../constants/constants';
 import * as BuildingConstants from '../../constants/building_constants';
@@ -8,7 +8,7 @@ import epstein from '../../assets/epstein.png';
 function Epstein_Head() {
   return (
     <button
-      onClick={increaseCookies}
+      onClick={increase_cookies}
       className="cursor-pointer transition-transform duration-100 hover:scale-[1.02] active:scale-[0.98]"
     >
       <img src={epstein} />
