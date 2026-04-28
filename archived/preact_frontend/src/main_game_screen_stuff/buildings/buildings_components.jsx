@@ -1,5 +1,5 @@
 import { useState, useRef } from 'preact/hooks';
-import { game_data } from '../../game_data/game_state';
+import { game_data } from '../../signup_and_login_stuff/session';
 import { buy_building } from '../../utils';
 import { BUILDINGS } from '../../constants/building_constants';
 

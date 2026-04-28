@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState } from 'preact/hooks';
 import { current_screen } from '../miscellaneous_info/screen_info';
 import { on_login } from './session';
 
@@ -13,6 +13,7 @@ function Sign_Up_Panel({ Try_Sign_Up, fields }) {
         className="w-full mb-2 p-2 border-2 border-gray-300 rounded-lg"
         value={fields.username}
         onChange={(e) => fields.setUsername(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter') Try_Sign_Up(); }}
       />
 
       <input
@@ -21,6 +22,7 @@ function Sign_Up_Panel({ Try_Sign_Up, fields }) {
         className="w-full mb-2 p-2 border-2 border-gray-300 rounded-lg"
         value={fields.email}
         onChange={(e) => fields.setEmail(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter') Try_Sign_Up(); }}
       />
 
       <input
@@ -29,6 +31,7 @@ function Sign_Up_Panel({ Try_Sign_Up, fields }) {
         className="w-full mb-2 p-2 border-2 border-gray-300 rounded-lg"
         value={fields.password}
         onChange={(e) => fields.setPassword(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter') Try_Sign_Up(); }}
       />
 
       <input
@@ -37,13 +40,22 @@ function Sign_Up_Panel({ Try_Sign_Up, fields }) {
         className="w-full mb-4 p-2 border-2 border-gray-300 rounded-lg"
         value={fields.confirmPassword}
         onChange={(e) => fields.setConfirmPassword(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter') Try_Sign_Up(); }}
       />
+
+      {fields.error && (
+        <p style={{ color: 'red', marginBottom: '8px', fontSize: '14px' }}>{fields.error}</p>
+      )}
+      {fields.success && (
+        <p style={{ color: 'green', marginBottom: '8px', fontSize: '14px' }}>{fields.success}</p>
+      )}
 
       <button
         className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 active:bg-blue-700 transition"
         onClick={Try_Sign_Up}
+        disabled={fields.loading}
       >
-        Sign Up
+        {fields.loading ? 'Creating account...' : 'Sign Up'}
       </button>
 
       <button
@@ -61,36 +73,46 @@ export default function Sign_Up_Screen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, set_error] = useState('');
+  const [success, set_success] = useState('');
+  const [loading, set_loading] = useState(false);
 
   const Try_Sign_Up = async () => {
+    set_error('');
+    set_success('');
+
+    if (!username || !email || !password || !confirmPassword) {
+      set_error('Please fill in all fields.');
+      return;
+    }
+
     if (password !== confirmPassword) {
-      alert('Passwords do not match');
+      set_error('Passwords do not match.');
       return;
     }
 
-    const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/signup`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, username, password }),
-    });
+    set_loading(true);
 
-    const data = await res.json();
+    try {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, username, password }),
+      });
 
-    if (!res.ok) {
-      alert(data.detail || 'Sign up failed');
-      return;
+      const data = await res.json();
+
+      if (!res.ok) {
+        set_error(data.detail || 'Something went wrong. Please try again.');
+      } else {
+        on_login(data.user, data.jwt);
+      }
+    } catch {
+      set_error('Could not reach the server. Check your connection.');
+    } finally {
+      set_loading(false);
     }
-
-    on_login(data.user);
   };
-
-  useEffect(() => {
-    const handle_enter = (e) => {
-      if (e.key === 'Enter') Try_Sign_Up();
-    };
-    document.addEventListener('keydown', handle_enter);
-    return () => document.removeEventListener('keydown', handle_enter);
-  }, [username, email, password, confirmPassword]);
 
   return (
     <div style={{
@@ -105,7 +127,7 @@ export default function Sign_Up_Screen() {
     }}>
       <Sign_Up_Panel
         Try_Sign_Up={Try_Sign_Up}
-        fields={{ username, setUsername, email, setEmail, password, setPassword, confirmPassword, setConfirmPassword }}
+        fields={{ username, setUsername, email, setEmail, password, setPassword, confirmPassword, setConfirmPassword, error, success, loading }}
       />
     </div>
   );

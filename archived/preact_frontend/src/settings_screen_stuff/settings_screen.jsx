@@ -1,10 +1,47 @@
-import { useEffect } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { current_screen } from '../miscellaneous_info/screen_info';
-import { logged_in_user } from '../miscellaneous_info/user_info';
 import { current_audio } from '../miscellaneous_info/misc_info';
-import { game_data, initial_save, saveGameData } from '../game_data/game_data_loading';
+import { game_data, is_logged_in, jwt } from '../signup_and_login_stuff/session';
+
+function Reset_Save_Confirmation_Panel({ on_confirm, on_cancel }) {
+  return (
+    <div style={{
+      position: 'fixed',
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      background: 'white',
+      border: '1px solid gray',
+      borderRadius: '12px',
+      padding: '24px',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: '16px',
+      zIndex: 100,
+    }}>
+      <p style={{ fontSize: '18px', fontWeight: 'bold' }}>Are you sure?</p>
+      <div style={{ display: 'flex', gap: '12px' }}>
+        <button
+          onClick={on_confirm}
+          className="bg-red-500 text-white py-2 px-6 rounded-lg hover:bg-red-600 active:bg-red-700 transition"
+        >
+          Yes
+        </button>
+        <button
+          onClick={on_cancel}
+          className="bg-gray-300 text-black py-2 px-6 rounded-lg hover:bg-gray-400 active:bg-gray-500 transition"
+        >
+          No
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function Settings_Screen() {
+  const [show_reset_confirmation, set_show_reset_confirmation] = useState(false);
+
   useEffect(() => {
     const handleKey = (e) => {
       if (e.key === 'Escape') current_screen.value = 'main';
@@ -23,8 +60,29 @@ export default function Settings_Screen() {
       >
         Buy Premium
       </button>
-      <Reset_Save_Button />
+      <Reset_Save_Button on_click={() => set_show_reset_confirmation(true)} />
       <Log_Out_Button />
+      {show_reset_confirmation && (
+        <Reset_Save_Confirmation_Panel
+          on_confirm={async () => {
+            const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/reset_game_data`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${jwt}`,
+              },
+            });
+            if (res.ok) {
+              const data = await res.json();
+              game_data.value = data.game_data;
+            } else {
+              console.error('Reset failed');
+            }
+            set_show_reset_confirmation(false);
+          }}
+          on_cancel={() => set_show_reset_confirmation(false)}
+        />
+      )}
     </div>
   );
 }
@@ -69,15 +127,10 @@ function X_Button({ on_click }) {
   );
 }
 
-function Reset_Save_Button() {
-  const handle_reset = async () => {
-    game_data.value = initial_save;
-    await saveGameData();
-  };
-
+function Reset_Save_Button({ on_click }) {
   return (
     <button
-      onClick={handle_reset}
+      onClick={on_click}
       className="bg-gray-500 text-white py-2 px-6 rounded-lg hover:bg-gray-600 active:bg-gray-700 transition"
     >
       Reset Save
@@ -87,9 +140,8 @@ function Reset_Save_Button() {
 
 function Log_Out_Button() {
   const handle_logout = () => {
-    logged_in_user.value = null;
-    localStorage.removeItem('logged_in_user');
-    current_screen.value = 'sign_up';
+    is_logged_in.value = false;
+    current_screen.value = 'login';
 
     if (current_audio.value) {
       current_audio.value.pause();

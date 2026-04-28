@@ -8,6 +8,4 @@ type current_screen_type =
   'buy_premium'
 ;
 
-const saved_user = localStorage.getItem('logged_in_user');
-
-export const current_screen = signal<current_screen_type>(saved_user ? 'main' : 'sign_up');
+export const current_screen = signal<current_screen_type>('login');

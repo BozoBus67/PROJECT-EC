@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import { game_data } from '../game_data/game_state';
+import { game_data } from '../signup_and_login_stuff/session';
 import { save_game_data } from '../utils';
 import { current_screen } from '../miscellaneous_info/screen_info';
 import settingsIcon from '../assets/settings_gear_icon.jpg';
@@ -7,13 +7,11 @@ import Top_Bar from './parts_of_main_screen/top_bar';
 import Main_Body from './parts_of_main_screen/main_body';
 
 function use_main_screen_effects(trigger_save) {
-  // autosave every 60 seconds
   useEffect(() => {
     const interval = setInterval(trigger_save, 60000);
     return () => clearInterval(interval);
   }, []);
 
-  // save on ctrl+s / cmd+s
   useEffect(() => {
     const handleKey = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 's') {
@@ -25,7 +23,6 @@ function use_main_screen_effects(trigger_save) {
     return () => window.removeEventListener('keydown', handleKey);
   }, []);
 
-  // CPS tick — increment quantity every second
   useEffect(() => {
     const interval = setInterval(() => {
       game_data.value = {
@@ -46,13 +43,25 @@ function Game_Saved_Popup() {
 }
 
 function Settings_Button() {
+  const [hovered, set_hovered] = useState(false);
+
   return (
     <button
       onClick={() => current_screen.value = 'settings'}
-      style={{ position: 'fixed', bottom: '16px', left: '16px', border: '1px solid gray', borderRadius: '8px', padding: '2px' }}
-      className="hover:opacity-70 active:opacity-50 transition"
+      onMouseEnter={() => set_hovered(true)}
+      onMouseLeave={() => set_hovered(false)}
+      style={{
+        position: 'fixed',
+        bottom: '16px',
+        left: '16px',
+        border: '1px solid gray',
+        borderRadius: '8px',
+        padding: '2px',
+        outline: hovered ? '2px solid #facc15' : '2px solid transparent',
+        cursor: hovered ? 'pointer' : 'default',
+      }}
     >
-      <img src={settingsIcon} style={{ width: '40px', height: '40px', display: 'block' }} />
+      <img src={settingsIcon} draggable={false} style={{ width: '40px', height: '40px', display: 'block' }} />
     </button>
   );
 }

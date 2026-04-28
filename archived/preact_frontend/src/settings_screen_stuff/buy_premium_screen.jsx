@@ -1,6 +1,5 @@
 import { useEffect } from 'preact/hooks';
 import { current_screen } from '../miscellaneous_info/screen_info';
-import { logged_in_user } from '../miscellaneous_info/user_info';
 import { account_tiers } from '../miscellaneous_info/misc_info';
 
 export default function Buy_Premium_Screen() {
@@ -13,7 +12,6 @@ export default function Buy_Premium_Screen() {
   }, []);
 
   const paid_tiers = account_tiers.value.filter(t => t.id !== 'free');
-  console.log(paid_tiers);
 
   return (
     <div style={{

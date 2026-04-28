@@ -83,7 +83,9 @@ function Music_Player_Button({ onClick }) {
 
 export default function Music_Player() {
   const [open, setOpen] = useState(false);
-  const [current_url, set_current_url] = useState(null);
+  const current_url = current_audio.value?.src
+    ? new URL(current_audio.value.src).pathname
+    : null;
 
   useEffect(() => {
     if (!open) return;
@@ -123,7 +125,6 @@ export default function Music_Player() {
     audio.play();
     audio.onended = () => play_next(url);
     current_audio.value = audio;
-    set_current_url(url);
   };
 
   const play_next = (url) => {

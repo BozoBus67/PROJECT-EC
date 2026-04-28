@@ -1,11 +1,15 @@
 import { signal } from '@preact/signals';
+import { current_screen } from '../miscellaneous_info/screen_info';
 
+export const game_data = signal(null);
 export const is_logged_in = signal(false);
-export const logged_in_user_id = signal(null);
 export let session_data = null;
+export let jwt = null;
 
-export function on_login(user) {
+export function on_login(user, token) {
   session_data = user;
-  logged_in_user_id.value = user.id;
+  jwt = token;
+  game_data.value = user.game_data;
+  current_screen.value = 'main';
   is_logged_in.value = true;
 }

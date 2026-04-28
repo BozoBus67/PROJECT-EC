@@ -1,9 +1,7 @@
-import { game_data } from './game_data/game_state';
-import { logged_in_user_id } from './signup_and_login_stuff/session';
+import { game_data, jwt } from './signup_and_login_stuff/session';
 import { BUILDINGS } from './constants/building_constants';
 
-// game data calculations
-function recalculate_cps() {
+export function recalculate_cps() {
   const cps = Object.entries(game_data.value.buildings).reduce((total, [key, count]) => {
     return total + BUILDINGS[key].cps * count;
   }, 0);
@@ -37,13 +35,14 @@ export function buy_building(key) {
   recalculate_cps();
 }
 
-// save
 export async function save_game_data() {
   const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/save_game_data`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${jwt}`,
+    },
     body: JSON.stringify({
-      user_id: logged_in_user_id.value,
       game_data: JSON.parse(JSON.stringify(game_data.value)),
     }),
   });
