@@ -102,8 +102,10 @@ const NSFW = (() => {
   };
 })();
 
-// SFW values — resume / portfolio edition. AD_TEXT and BAKERY_SUBSTITUTE_NAME
-// not yet swapped; QUANTITY_NAME also still set to the NSFW string for now.
+// SFW values — resume / portfolio edition. AD_TEXT is intentionally identical
+// to NSFW (the "HOT GIRLS IN YOUR AREA WANT TO S3X" gag stays as the clickbait
+// joke regardless of edition — don't swap unless asked). QUANTITY_NAME is also
+// still the NSFW string; revisit if/when a clean substitute is decided.
 const SFW = (() => {
   const QUANTITY_NAME = 'children trafficked';
   return {
