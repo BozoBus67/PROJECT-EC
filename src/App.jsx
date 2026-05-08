@@ -166,6 +166,7 @@ async function bootstrap_session(dispatch) {
       const data = await api_me();
       dispatch(login({ user: data.user }));
       notify_migration(data.migration_info);
+      redirect_away_from_stale_auth_hash();
       return;
     } catch {
       await supabase.auth.signOut({ scope: 'local' });
@@ -180,4 +181,18 @@ async function bootstrap_session(dispatch) {
   const data = await api_me();
   dispatch(login({ user: data.user }));
   notify_migration(data.migration_info);
+  redirect_away_from_stale_auth_hash();
+}
+
+// HashRouter persists the URL across refreshes — so a hash of `#/signup` or
+// `#/login` left over from a previous No_Session_Shell bounce will keep
+// rendering the auth screens even after we successfully establish a session.
+// Snap those specific hashes back to /game once bootstrap succeeds. The
+// in-app "Log In / Sign Up" button in the top bar still works because that
+// navigation happens AFTER bootstrap completes.
+function redirect_away_from_stale_auth_hash() {
+  const hash = window.location.hash;
+  if (hash === '#/signup' || hash === '#/login') {
+    window.location.hash = '#/game';
+  }
 }
