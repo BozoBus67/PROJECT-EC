@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { Back_Arrow_Button } from '../shared/components';
+import { useEscapeKey } from '../shared/hooks';
 import { login } from '../shared/store/sessionSlice';
 import { supabase } from '../shared/supabase_client';
 import { variant_asset } from '../shared/variant_assets';
@@ -15,9 +17,15 @@ export default function Login_Screen() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const is_anonymous = useSelector(state => state.session.is_anonymous);
+  const is_logged_in = useSelector(state => state.session.is_logged_in);
 
   const [error, set_error] = useState('');
   const [loading, set_loading] = useState(false);
+
+  // Back nav (arrow + esc) only for users with a session to return to.
+  // The No_Session_Shell fallback (anon sign-in disabled, etc.) doesn't
+  // have /game available, so showing a back button there would dead-end.
+  useEscapeKey(() => navigate('/game'), is_logged_in && !loading);
 
   const try_login = async ({ username_or_email, password }) => {
     set_error('');
@@ -58,6 +66,7 @@ export default function Login_Screen() {
       backgroundSize: 'cover',
       backgroundPosition: 'center',
     }}>
+      {is_logged_in && <Back_Arrow_Button to="/game" />}
       <Login_Panel
         on_submit={try_login}
         error={error}
