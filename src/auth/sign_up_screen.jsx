@@ -6,7 +6,10 @@ import { supabase } from '../shared/supabase_client';
 import { variant_asset } from '../shared/variant_assets';
 import { api_signup } from './api';
 
-const jeffrey_epstein_blurry = variant_asset('backgrounds', 'jeffrey_epstein_blurry');
+// SFW reuses the loading-screen image as the auth background — there's no
+// separate SFW auth-bg asset. NSFW uses the original jeff blurry photo.
+const SFW = import.meta.env.VITE_SFW === 'true';
+const auth_background = variant_asset('backgrounds', SFW ? 'loading_screen' : 'jeffrey_epstein_blurry');
 
 export default function Sign_Up_Screen() {
   const navigate = useNavigate();
@@ -48,7 +51,7 @@ export default function Sign_Up_Screen() {
       height: '100vh',
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundImage: `url(${jeffrey_epstein_blurry})`,
+      backgroundImage: `url(${auth_background})`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
     }}>
