@@ -190,9 +190,9 @@ const SFW = (() => {
       account_tier_4: 'Premium',
       account_tier_5: 'Luxurious',
       account_tier_6: 'Diamond',
-      account_tier_7: 'Diamond+',
-      account_tier_8: 'Diamond++',
-      account_tier_9: 'Diamond+++',
+      account_tier_7: 'Ruby',
+      account_tier_8: 'Amethyst',
+      account_tier_9: 'Emerald',
     },
   };
 })();
