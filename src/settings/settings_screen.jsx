@@ -11,6 +11,8 @@ import { useTheme } from '../shared/theme';
 import { api_reset_game } from '../game';
 import { api_get_my_discord, api_set_kirk_mode, api_set_theme } from './api';
 
+const SFW = import.meta.env.VITE_SFW === 'true';
+
 export default function Settings_Screen() {
   const dispatch = useDispatch();
   const [show_reset_confirmation, set_show_reset_confirmation] = useState(false);
@@ -50,7 +52,7 @@ function Settings_Screen_Body({ on_reset_click }) {
       <Change_Login_Details_Button />
       <Get_Discord_Button />
       <Theme_Picker />
-      <Kirk_Mode_Toggle />
+      {SFW ? <Kirk_Mode_Placeholder /> : <Kirk_Mode_Toggle />}
       <Reset_Save_Button on_click={on_reset_click} />
       <Log_Out_Button />
     </>
@@ -169,6 +171,22 @@ function Kirk_Mode_Toggle() {
         </div>
       )}
     </div>
+  );
+}
+
+// SFW edition has no Kirk Mode — render a disabled "???" button in its place
+// so the settings layout stays the same and players see something happens here
+// without revealing the underlying NSFW feature.
+function Kirk_Mode_Placeholder() {
+  const theme = useTheme();
+  return (
+    <button
+      type="button"
+      disabled
+      style={{ ...neutral_button_style(theme), opacity: 0.5, cursor: 'not-allowed' }}
+    >
+      ???
+    </button>
   );
 }
 

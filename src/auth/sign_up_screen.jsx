@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import jeffrey_epstein_blurry from '../assets/game_screen/jeffrey_epstein_blurry.png';
 import { login } from '../shared/store/sessionSlice';
 import { supabase } from '../shared/supabase_client';
+import { variant_asset } from '../shared/variant_assets';
 import { api_signup } from './api';
+
+const jeffrey_epstein_blurry = variant_asset('backgrounds', 'jeffrey_epstein_blurry');
 
 export default function Sign_Up_Screen() {
   const navigate = useNavigate();

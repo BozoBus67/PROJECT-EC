@@ -51,7 +51,7 @@ ELO bands at a glance:
 
 Bots are derived from `shared/scroll_registry.js` — every scroll with a non-null `chess_elo` becomes a bot. Currently the only excluded scroll is `blurry_epstein` (display name "Shadow Clone Jutsu"), which has no character flavor and gets `chess_elo: null`. To add or exclude a bot, edit the registry, not `chess/constants.js`.
 
-Each bot's face image is looked up by slug via `SCROLL_FACE_BY_SLUG[scroll.id]` — the slug equals the image filename basename in `assets/master_scroll_faces/`.
+Each bot's face image is looked up by slug via `SCROLL_FACE_BY_SLUG[scroll.id]` — the slug equals the image filename basename in `assets/<variant>/master_scroll_faces/` (variant = `extended/` for NSFW or `cookie_clicker/` for SFW; resolution in `shared/variant_assets.js`).
 
 Epstein is a special hardcoded extra bot — locked until every regular bot is beaten, then becomes the final boss at the Stockfish ceiling.
 

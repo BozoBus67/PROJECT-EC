@@ -57,7 +57,7 @@ describe('scroll_registry — drift against constants.js', () => {
 });
 
 describe('scroll_registry — drift against image assets', () => {
-  it('every registry id has a default face image in master_scroll_faces/', () => {
+  it('every registry id has a default face image in <variant>/master_scroll_faces/', () => {
     const missing = SCROLL_IDS.filter(id => !SCROLL_FACE_PAIRS[id]?.original);
     expect(missing).toEqual([]);
   });

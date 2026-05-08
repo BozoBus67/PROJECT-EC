@@ -51,7 +51,7 @@ const TIER_PERKS = {
 const TIER_IMAGES = Object.fromEntries(
   Array.from({ length: 9 }, (_, i) => [
     `account_tier_${i + 1}`,
-    new URL(`../assets/tier_images/tier_${i + 1}.svg`, import.meta.url).href,
+    new URL(`../assets/ui/tier_images/tier_${i + 1}.svg`, import.meta.url).href,
   ])
 );
 

@@ -14,8 +14,8 @@
 // The active theme is persisted server-side in premium_game_data.theme; see
 // PATCH /me/theme for the gating logic.
 import { useSelector } from 'react-redux';
-import cookie_clicker_bg from '../assets/game_screen/cookie_clicker_background_art.jpg';
-import parchment from '../assets/game_screen/yellow_parchment_paper.jpg';
+import cookie_clicker_bg from '../assets/ui/cookie_clicker_background_art.jpg';
+import parchment from '../assets/ui/yellow_parchment_paper.jpg';
 
 export const themes = {
   default: {
