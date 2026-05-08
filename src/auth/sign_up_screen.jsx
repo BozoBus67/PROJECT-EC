@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../shared/store/sessionSlice';
 import { supabase } from '../shared/supabase_client';
 import { variant_asset } from '../shared/variant_assets';
-import { api_signup } from './api';
+import { api_me, api_signup, api_upgrade_anon } from './api';
 
 // SFW reuses the loading-screen image as the auth background — there's no
 // separate SFW auth-bg asset. NSFW uses the original jeff blurry photo.
@@ -14,6 +14,7 @@ const auth_background = variant_asset('backgrounds', SFW ? 'loading_screen' : 'j
 export default function Sign_Up_Screen() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const is_anonymous = useSelector(state => state.session.is_anonymous);
 
   const [error, set_error] = useState('');
   const [loading, set_loading] = useState(false);
@@ -33,9 +34,22 @@ export default function Sign_Up_Screen() {
     set_loading(true);
 
     try {
-      const data = await api_signup(email, username, password);
-      await supabase.auth.setSession({ access_token: data.jwt, refresh_token: data.refresh_token });
-      dispatch(login({ user: data.user }));
+      // Anonymous → permanent: upgrade in place so the guest's progress is
+      // preserved (same user.id, same User_Login_Data row). Cold signup
+      // (no anon session, e.g. anon auth disabled) goes through /signup
+      // which creates a fresh auth user.
+      if (is_anonymous) {
+        await api_upgrade_anon(email, username, password);
+        // Refresh the JWT so the local session reflects is_anonymous=false,
+        // then re-fetch /me to pick up the new username/email.
+        await supabase.auth.refreshSession();
+        const me = await api_me();
+        dispatch(login({ user: me.user }));
+      } else {
+        const data = await api_signup(email, username, password);
+        await supabase.auth.setSession({ access_token: data.jwt, refresh_token: data.refresh_token });
+        dispatch(login({ user: data.user }));
+      }
       navigate('/game');
     } catch (err) {
       set_error(err?.detail || 'Error: An unknown error occurred — please try again.');
@@ -60,12 +74,13 @@ export default function Sign_Up_Screen() {
         error={error}
         loading={loading}
         go_to_login={() => navigate('/login')}
+        upgrading_guest={is_anonymous}
       />
     </div>
   );
 }
 
-function Sign_Up_Panel({ on_submit, error, loading, go_to_login }) {
+function Sign_Up_Panel({ on_submit, error, loading, go_to_login, upgrading_guest }) {
   const [username, set_username] = useState('');
   const [email, set_email] = useState('');
   const [password, set_password] = useState('');
@@ -85,6 +100,11 @@ function Sign_Up_Panel({ on_submit, error, loading, go_to_login }) {
       color: '#e0e0f0',
     }}>
       <h2 style={{ margin: '0 0 20px', color: '#facc15', fontSize: '32px', fontWeight: 'bold', textAlign: 'center' }}>Sign Up</h2>
+      {upgrading_guest && (
+        <p style={{ margin: '0 0 16px', color: '#a3e635', fontSize: '13px', textAlign: 'center', lineHeight: 1.4 }}>
+          Your guest progress will be saved to this new account.
+        </p>
+      )}
 
       <input
         type="text"

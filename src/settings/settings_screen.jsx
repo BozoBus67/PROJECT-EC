@@ -3,7 +3,7 @@ import { useTierGate } from '../shared/hooks';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { logout, update_game_data, update_premium_game_data_field } from '../shared/store/sessionSlice';
+import { update_game_data, update_premium_game_data_field } from '../shared/store/sessionSlice';
 import { Confirm_Modal, Modal_Overlay, Subscreen } from '../shared/components';
 import { stop_player } from '../music/audio_state';
 import { supabase } from '../shared/supabase_client';
@@ -47,14 +47,15 @@ export default function Settings_Screen() {
 }
 
 function Settings_Screen_Body({ on_reset_click }) {
+  const is_anonymous = useSelector(state => state.session.is_anonymous);
   return (
     <>
-      <Change_Login_Details_Button />
+      {!is_anonymous && <Change_Login_Details_Button />}
       <Get_Discord_Button />
       <Theme_Picker />
       {SFW ? <Kirk_Mode_Placeholder /> : <Kirk_Mode_Toggle />}
       <Reset_Save_Button on_click={on_reset_click} />
-      <Log_Out_Button />
+      {!is_anonymous && <Log_Out_Button />}
     </>
   );
 }
@@ -251,16 +252,16 @@ function Reset_Save_Button({ on_click }) {
 }
 
 function Log_Out_Button() {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-
   const handle_logout = async () => {
     stop_player();
     await supabase.auth.signOut();
-    dispatch(logout());
-    // No navigate needed — Auth_Shell's catch-all (Auth_Default_Redirect) sees
-    // we're at /game/settings (not at /), so it lands on /login automatically.
-    // First-time visitors arriving at / still get /signup the same way.
+    // Hard reload so App.jsx::bootstrap_session re-runs and signs the user
+    // back in anonymously — they become a fresh guest. Smoother than
+    // dispatching logout into a no-session shell, since with anon-by-default
+    // the natural post-logout state is "you're a guest now," not "you're at
+    // a login screen." If anon sign-in fails on bootstrap, the No_Session
+    // fallback in Main_Shell still routes the user to the auth screens.
+    window.location.reload();
   };
 
   // Log Out stays red across all themes — "danger" should look like danger

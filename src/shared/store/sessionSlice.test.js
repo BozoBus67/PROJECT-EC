@@ -37,9 +37,16 @@ describe('sessionSlice — login / logout', () => {
     store.dispatch(logout());
     const state = store.getState().session;
     expect(state.is_logged_in).toBe(false);
+    expect(state.is_anonymous).toBe(false);
     expect(state.session_data).toBeNull();
     expect(state.game_data).toBeNull();
     expect(state.premium_game_data).toBeNull();
+  });
+
+  it('login copies is_anonymous flag from the user payload', () => {
+    const store = make_store();
+    store.dispatch(login({ user: { is_anonymous: true, game_data: {}, premium_game_data: {} } }));
+    expect(store.getState().session.is_anonymous).toBe(true);
   });
 });
 

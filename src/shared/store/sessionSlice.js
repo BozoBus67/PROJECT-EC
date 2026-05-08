@@ -4,6 +4,7 @@ const sessionSlice = createSlice({
   name: 'session',
   initialState: {
     is_logged_in: false,
+    is_anonymous: false,
     session_data: null,
     game_data: null,
     premium_game_data: null,
@@ -14,12 +15,14 @@ const sessionSlice = createSlice({
     login(state, action) {
       const { user } = action.payload;
       state.is_logged_in = true;
+      state.is_anonymous = !!user.is_anonymous;
       state.session_data = user;
       state.game_data = user.game_data;
       state.premium_game_data = user.premium_game_data ?? null;
     },
     logout(state) {
       state.is_logged_in = false;
+      state.is_anonymous = false;
       state.session_data = null;
       state.game_data = null;
       state.premium_game_data = null;
