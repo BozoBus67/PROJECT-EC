@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Back_Arrow_Button, Modal_Overlay } from '../shared/components';
 import { useEscapeKey } from '../shared/hooks';
@@ -9,10 +10,16 @@ import { api_redeem_promotion_oath, api_redeem_tokens } from './api';
 
 export default function Redeem_Tokens_Screen() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const premium_game_data = useSelector(state => state.session.premium_game_data);
   const [show_poisson_modal, set_show_poisson_modal] = useState(false);
   const [show_promotion_modal, set_show_promotion_modal] = useState(false);
   const theme = useTheme();
+
+  // Escape returns to /game when no modal is open. When a modal IS open, the
+  // modal's own useEscapeKey handles the close — we suppress this handler so
+  // the two don't both fire on the same keypress.
+  useEscapeKey(() => navigate('/game'), !show_poisson_modal && !show_promotion_modal);
 
   // Shared success handler: bump tokens, mark this offer as redeemed in pgd.
   // `redeemed_key` is the field on premium_game_data.redeemed for this
@@ -62,9 +69,19 @@ function Redeem_Tokens_Screen_Body({ on_open_poisson_modal, on_open_promotion_mo
     border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer',
   };
   return (
-    <>
-      <h1 style={{ color: theme.accent, marginBottom: '8px', fontWeight: 'bold' }}>One time offers!</h1>
-      <p style={{ color: theme.text_muted, marginBottom: '24px' }}>Placeholder description text.</p>
+    <div style={{
+      background: theme.panel,
+      border: `2px solid ${theme.panel_border}`,
+      borderRadius: '12px',
+      padding: '36px 48px',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      boxShadow: '0 8px 32px rgba(0,0,0,0.45)',
+      maxWidth: '600px',
+    }}>
+      <h1 style={{ color: theme.accent, marginTop: 0, marginBottom: '8px', fontWeight: 'bold', textAlign: 'center' }}>One time offers!</h1>
+      <p style={{ color: theme.text_muted, marginBottom: '24px', textAlign: 'center' }}>Placeholder description text.</p>
       <button
         type="button"
         onClick={on_open_promotion_modal}
@@ -79,7 +96,7 @@ function Redeem_Tokens_Screen_Body({ on_open_poisson_modal, on_open_promotion_mo
       >
         the 3 assumptions for the poisson distributions
       </button>
-    </>
+    </div>
   );
 }
 

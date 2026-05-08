@@ -3,14 +3,18 @@
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Back_Arrow_Button } from '../shared/components';
+import { useEscapeKey } from '../shared/hooks';
 import { useTheme } from '../shared/theme';
 import { BOTS, EPSTEIN_BOT_ID, REGULAR_BOT_IDS, useBotFace } from './constants';
 
 export default function Chess_Screen() {
   const theme = useTheme();
+  const navigate = useNavigate();
   const beaten_list = useSelector(s => s.session.premium_game_data?.chess_beaten_bots ?? []);
   const beaten = new Set(beaten_list);
   const epstein_unlocked = REGULAR_BOT_IDS.every(id => beaten.has(id));
+
+  useEscapeKey(() => navigate('/game'));
 
   return (
     <div style={{
