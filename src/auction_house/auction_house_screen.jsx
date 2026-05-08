@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Async_Refresh_Button, Confirm_Modal, Modal_Overlay, Subscreen } from '../shared/components';
 import { useEscapeKey } from '../shared/hooks';
 import { increment_game_data_field, update_game_data, update_premium_game_data } from '../shared/store/sessionSlice';
+import { supabase } from '../shared/supabase_client';
 import { useTheme } from '../shared/theme';
 import { api_buy_listing, api_cancel_listing, api_create_listing, api_get_listings } from './api';
 import { CURRENCIES, opposite_currency } from './auction_house_utils';
@@ -22,6 +23,29 @@ export default function Auction_House_Screen() {
 
   useEffect(() => {
     refresh().catch(e => toast.error(e?.detail || 'Error: Failed to load listings.', { id: 'load-listings-error' }));
+  }, []);
+
+  // Live updates: subscribe to Supabase Realtime on the Auction_House table.
+  // Any INSERT/UPDATE/DELETE in any client triggers a refetch through backend
+  // (canonical data still comes via /get_listings — the realtime channel is
+  // just a "ping" so we know to refetch). Failures here are logged silently
+  // because the user didn't initiate the refresh; the polling fallback (the
+  // bottom-left ↻ button) is always available.
+  useEffect(() => {
+    const channel = supabase
+      .channel('auction_house_listings')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'Auction_House' },
+        () => {
+          api_get_listings()
+            .then(set_listings)
+            .catch(err => console.error('[realtime] auction refresh failed:', err));
+        },
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   return (
