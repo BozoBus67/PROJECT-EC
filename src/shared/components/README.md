@@ -27,6 +27,7 @@ In practice, nothing in this app ever nested deep enough to need the distinction
 **If a deeper nested flow ever appears** (e.g. `/game/foo/bar/baz` where each level should be backable independently AND there should be a "jump home" shortcut), resurrect the component:
 
 ```bash
+# folder was named vite_part_react/ at that commit (renamed to frontend/ since)
 git show 3457f88:vite_part_react/src/shared/components/x_button.jsx
 ```
 

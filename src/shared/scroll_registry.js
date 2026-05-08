@@ -2,14 +2,15 @@
 //
 // Each scroll has a stable slug `id` (lowercase, snake_cased, never reused
 // once shipped). The slug equals the image-asset filename basename in
-// `assets/master_scroll_faces/` — that's how scroll_faces.js wires images.
+// `assets/<variant>/master_scroll_faces/` — that's how scroll_faces.js
+// wires images. Variant resolution lives in `variant_assets.js`.
 //
 // User-facing strings (display_name, description) live in `constants.js`
 // so the whole "swappable text layer" lives in one place — see the comment
 // at the top of that file. This file owns mechanics only: the slug list
 // and chess metadata.
 //
-// Adding a scroll = (1) drop the image into master_scroll_faces, (2) add
+// Adding a scroll = (1) drop the image into <variant>/master_scroll_faces, (2) add
 // one entry here, (3) add display_name + description in constants.js,
 // (4) add the slug to backend/data/scrolls.py + premium_game_data.py.
 // Reordering this array changes nothing in the database — the slug is

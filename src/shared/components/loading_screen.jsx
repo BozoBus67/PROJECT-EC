@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
+import { variant_asset } from '../variant_assets';
 
 const STUCK_THRESHOLD_MS = 15_000;
+const SFW = import.meta.env.VITE_SFW === 'true';
+const sfw_loading_bg = SFW ? variant_asset('backgrounds', 'loading_screen') : null;
 
 export default function Loading_Screen() {
   // After STUCK_THRESHOLD_MS, surface a "still loading? refresh" affordance so
@@ -21,7 +24,7 @@ export default function Loading_Screen() {
       height: '100vh',
       justifyContent: 'center',
       alignItems: 'center',
-      background: '#1a1a2e',
+      background: sfw_loading_bg ? `url(${sfw_loading_bg}) center/cover` : '#1a1a2e',
       color: '#facc15',
       fontWeight: 'bold',
       fontSize: '18px',

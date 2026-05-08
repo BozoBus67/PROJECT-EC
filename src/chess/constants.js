@@ -19,10 +19,12 @@
 //   1320–3190    →  same  (Stockfish's native range)
 //   > 3190       →  3190  (clamped, only Epstein hits this — by design)
 
-import epstein_face from '../assets/game_screen/epstein.png';
 import { useKirkifiedFace } from '../shared/kirkified_faces';
 import { SCROLL_FACE_PAIRS } from '../shared/scroll_faces';
 import { SCROLL_REGISTRY } from '../shared/scroll_registry';
+import { variant_asset } from '../shared/variant_assets';
+
+const epstein_face = variant_asset('backgrounds', 'epstein');
 
 export const EPSTEIN_BOT_ID = 'epstein';
 export const EPSTEIN_BOT_ELO = 3190;  // Stockfish ceiling — final boss, plays at full max.

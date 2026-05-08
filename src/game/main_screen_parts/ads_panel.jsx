@@ -4,7 +4,7 @@ import { useTierGate } from '../../shared/hooks';
 import { useKirkifiedFace } from '../../shared/kirkified_faces';
 import { AD_ROTATION_MS } from '../constants';
 import { ADS, AD_CLOSE_BUTTON_CORNERS, random_next_ad_index } from './main_body_utils';
-import cc_bg from '../../assets/game_screen/cookie_clicker_background_art.jpg';
+import cc_bg from '../../assets/ui/cookie_clicker_background_art.jpg';
 
 export default function Ads_Panel() {
   const { gate, lock_modal } = useTierGate(2);

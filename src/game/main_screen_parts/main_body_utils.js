@@ -1,23 +1,23 @@
 // Clickbait-ad rotation data + helpers used by the middle pane of Main_Body.
-// The ad image set comes from the alphabetical filenames in
-// assets/clickbait_faces/ — drop a new image in that folder and it joins the
-// rotation automatically. JPG is preferred for photographic ads (much smaller
-// than PNG); PNG is fine for the few that need transparency.
+// The ad image set comes from `<variant>/clickbait_faces/`, where `<variant>`
+// is `extended/` (NSFW) or `cookie_clicker/` (SFW), selected via VITE_SFW.
+// Drop a new image in the active variant's folder and it joins the rotation
+// automatically. JPG is preferred for photographic ads (much smaller than
+// PNG); PNG is fine for the few that need transparency.
 //
 // Each ad is paired with an optional "kirkified" version sourced from
-// assets/clickbait_faces_kirkified/ by stem-name match. So `vishnu_1.jpg`
-// pairs with `vishnu_1_kirkified.jpg` if it exists. The pairing logic lives
-// in shared/kirkified_faces.js — same helper that powers the master-scroll
-// faces. Adding a kirkified variant later: drop the file in the kirkified
-// folder using the `<original_stem>_kirkified.jpg` naming and it pairs up
-// automatically.
+// `<variant>/clickbait_faces_kirkified/` by stem-name match. So
+// `vishnu_1.jpg` pairs with `vishnu_1_kirkified.jpg` if it exists. The
+// pairing logic lives in shared/kirkified_faces.js — same helper that
+// powers the master-scroll faces. Variant resolution: shared/variant_assets.js.
 
 import { pair_by_stem } from '../../shared/kirkified_faces';
+import { variant_modules } from '../../shared/variant_assets';
 
-const ad_modules = import.meta.glob('../../assets/clickbait_faces/*.{png,jpg}', { eager: true });
-const kirkified_modules = import.meta.glob('../../assets/clickbait_faces_kirkified/*.jpg', { eager: true });
-
-export const ADS = Object.values(pair_by_stem(ad_modules, kirkified_modules));
+export const ADS = Object.values(pair_by_stem(
+  variant_modules.clickbait_faces,
+  variant_modules.clickbait_faces_kirkified,
+));
 
 // Where to place the ad's close-X button. Each rotation picks a random corner
 // to make the close button slightly harder to catch — leaning into the

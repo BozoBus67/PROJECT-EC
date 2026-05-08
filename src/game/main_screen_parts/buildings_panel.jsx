@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux';
 import { Building_Row } from '../buildings/buildings_components';
-import cc_bg from '../../assets/game_screen/cookie_clicker_background_art.jpg';
+import cc_bg from '../../assets/ui/cookie_clicker_background_art.jpg';
 
 export default function Buildings_Panel() {
   const buildings = useSelector(state => state.session.buildings);

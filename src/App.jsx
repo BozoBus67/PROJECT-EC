@@ -7,7 +7,7 @@ import Game_Shell from './app_structure/game_shell';
 import { api_me } from './auth';
 import { init_yt_player, load_playlist } from './music/audio_state';
 import { get, post_auth } from './shared/api_client';
-import { Error_Boundary, Loading_Screen } from './shared/components';
+import { Env_Config_Error, Error_Boundary, Loading_Screen } from './shared/components';
 import { login, set_account_tiers, set_buildings } from './shared/store/sessionSlice';
 import { supabase } from './shared/supabase_client';
 import { useTheme } from './shared/theme';
@@ -15,7 +15,23 @@ import { notify_migration } from './shared/utils';
 
 const ACTIVE_PING_INTERVAL_MS = 60_000;
 
+// Required env vars whose absence renders the app unusable. App-breaking, so
+// we fail loud with a full-screen overlay rather than getting stuck on the
+// loading screen with a cryptic console error. Optional vars (like
+// VITE_STRIPE_PAYMENT_LINK) get a console.warn but don't block startup.
+const REQUIRED_ENV_VARS = ['VITE_BACKEND_URL', 'VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
+const missing_env_vars = REQUIRED_ENV_VARS.filter(v => !import.meta.env[v]);
+
+if (!import.meta.env.VITE_STRIPE_PAYMENT_LINK) {
+  console.warn('[env] VITE_STRIPE_PAYMENT_LINK is missing — Buy Tokens button will be non-functional.');
+}
+
 export default function App() {
+  if (missing_env_vars.length > 0) return <Env_Config_Error missing={missing_env_vars} />;
+  return <App_Inner />;
+}
+
+function App_Inner() {
   const dispatch = useDispatch();
   const is_logged_in = useSelector(state => state.session.is_logged_in);
   use_active_ping(is_logged_in);

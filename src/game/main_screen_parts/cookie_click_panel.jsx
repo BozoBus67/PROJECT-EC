@@ -3,8 +3,14 @@ import { useSelector } from 'react-redux';
 import * as Constants from '../../shared/constants';
 import { useAnimatedQuantity } from '../../shared/hooks';
 import { increase_cookies } from '../game_utils';
-import epstein from '../../assets/game_screen/epstein.png';
-import temple from '../../assets/game_screen/epstein_island_temple_extended_sky.jpg';
+import { variant_asset } from '../../shared/variant_assets';
+
+const SFW = import.meta.env.VITE_SFW === 'true';
+const epstein = variant_asset('backgrounds', 'epstein');
+const temple = variant_asset('backgrounds', 'epstein_island_temple_extended_sky');
+// Temple bg is dimmed in NSFW so the foreground reads against the busy art;
+// SFW's cookie-clicker background is already softer, so opacity stays at 1.
+const TEMPLE_BG_OPACITY = SFW ? 1 : 0.5;
 
 export default function Cookie_Click_Panel() {
   const quantity = useSelector(state => state.session.game_data?.quantity ?? 0);
@@ -33,7 +39,7 @@ export default function Cookie_Click_Panel() {
 
   return (
     <div ref={panel_ref} style={{ flex: '1 1 0', height: '100%', position: 'relative', background: '#fff', borderRight: '2px solid #facc15' }}>
-      <img src={temple} draggable={false} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 60%', opacity: 0.5, pointerEvents: 'none' }} />
+      <img src={temple} draggable={false} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 60%', opacity: TEMPLE_BG_OPACITY, pointerEvents: 'none' }} />
       <div style={{ position: 'relative', textAlign: 'center', width: '100%', paddingTop: '10px' }}>
         <div style={{ position: 'absolute', top: '110px', left: '50%', transform: 'translateX(-50%)', zIndex: 0 }}>
           <Epstein_Head on_click={handle_click} />
