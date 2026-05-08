@@ -1,25 +1,24 @@
-// Pattern B variant resolution. Two top-level asset folders — `extended/`
-// (NSFW) and `cookie_clicker/` (SFW) — mirror each other. The VITE_SFW env
-// var picks which one is active. In SFW mode, cookie_clicker/ entries take
-// priority; missing stems fall back to extended/ so the SFW preview stays
-// usable while cookie_clicker/ is being filled in. NSFW builds never touch
-// cookie_clicker/.
+// Variant resolution. `extended/` (NSFW) and `cookie_clicker/` (SFW) mirror
+// each other; VITE_SFW picks which is active. In SFW mode, cookie_clicker/
+// takes priority; missing stems fall back to extended/. NSFW builds never
+// touch cookie_clicker/.
+//
+// Not all asset categories are variant-aware. Clickbait ads (kept identical
+// between editions on purpose — the absurd-photo gag is the joke regardless
+// of edition) live in `assets/shared/` and are loaded directly by
+// main_body_utils.js, not through this file. UI chrome lives in `assets/ui/`.
 
 const SFW = import.meta.env.VITE_SFW === 'true';
 
 const ext = {
   master_scroll_faces:           import.meta.glob('../assets/extended/master_scroll_faces/*',           { eager: true }),
   master_scroll_faces_kirkified: import.meta.glob('../assets/extended/master_scroll_faces_kirkified/*', { eager: true }),
-  clickbait_faces:               import.meta.glob('../assets/extended/clickbait_faces/*',               { eager: true }),
-  clickbait_faces_kirkified:     import.meta.glob('../assets/extended/clickbait_faces_kirkified/*',     { eager: true }),
   backgrounds:                   import.meta.glob('../assets/extended/backgrounds/*',                   { eager: true }),
 };
 
 const cc = {
   master_scroll_faces:           import.meta.glob('../assets/cookie_clicker/master_scroll_faces/*',           { eager: true }),
   master_scroll_faces_kirkified: import.meta.glob('../assets/cookie_clicker/master_scroll_faces_kirkified/*', { eager: true }),
-  clickbait_faces:               import.meta.glob('../assets/cookie_clicker/clickbait_faces/*',               { eager: true }),
-  clickbait_faces_kirkified:     import.meta.glob('../assets/cookie_clicker/clickbait_faces_kirkified/*',     { eager: true }),
   backgrounds:                   import.meta.glob('../assets/cookie_clicker/backgrounds/*',                   { eager: true }),
 };
 
@@ -33,8 +32,6 @@ function merged(category) {
 export const variant_modules = {
   master_scroll_faces:           merged('master_scroll_faces'),
   master_scroll_faces_kirkified: merged('master_scroll_faces_kirkified'),
-  clickbait_faces:               merged('clickbait_faces'),
-  clickbait_faces_kirkified:     merged('clickbait_faces_kirkified'),
   backgrounds:                   merged('backgrounds'),
 };
 
