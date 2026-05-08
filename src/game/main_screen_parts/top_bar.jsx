@@ -30,7 +30,7 @@ export default function Top_Bar({ on_gamble_click, on_roulette_click }) {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-evenly',
-      padding: '0 12px',
+      padding: '0 4px',
       boxSizing: 'border-box',
       flexShrink: 0,
     }}>
