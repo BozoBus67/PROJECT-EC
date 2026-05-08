@@ -16,12 +16,13 @@ Each screen file holds its top-level component plus a `*_Panel` sub-component th
 
 ## Session restore on app boot
 
-`App.jsx::restore_session` runs once at mount. If `supabase.auth.getSession()` returns a cached session, it tries `api_me()` to validate that the JWT still works against our backend. Two outcomes:
+`App.jsx::bootstrap_session` runs once at mount. It tries to land the user in a session — anonymous if necessary — so they can play immediately without an account. Three outcomes:
 
-- **`/me` succeeds** — dispatch `login`, render `Game_Shell`.
-- **`/me` fails (typically 401: stale JWT)** — sign out and render `Auth_Shell`.
+- **Cached session, `/me` succeeds** — dispatch `login`, render `Main_Shell`. Most common path on repeat visits (real or anon user comes back).
+- **Cached session, `/me` fails (typically 401: stale JWT)** — sign out locally, then fall through to the no-session branch below.
+- **No session** — call `supabase.auth.signInAnonymously()` to mint a guest session, then `/me` (which auto-creates the `User_Login_Data` row on first contact). If anon sign-in itself fails (e.g. anonymous auth is disabled in the Supabase project), `Main_Shell` renders the `No_Session_Shell` fallback that routes to `/signup`.
 
-The sign-out branch uses `supabase.auth.signOut({ scope: 'local' })` rather than the default network sign-out. That's a deliberate choice:
+The local-only sign-out path uses `supabase.auth.signOut({ scope: 'local' })` rather than the default network sign-out. That's a deliberate choice:
 
 - The default `signOut()` posts to Supabase's `/logout` endpoint with the current access token. If we got here, that token was *just rejected by `/me`* — Supabase will reject it too and return **403**, producing a confusing-looking error in the console for what is actually expected behavior.
 - `scope: 'local'` clears the cached session client-side without making the network call. Same end state, no doomed request.

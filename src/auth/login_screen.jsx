@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../shared/store/sessionSlice';
 import { supabase } from '../shared/supabase_client';
@@ -14,6 +14,7 @@ const auth_background = variant_asset('backgrounds', SFW ? 'loading_screen' : 'j
 export default function Login_Screen() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const is_anonymous = useSelector(state => state.session.is_anonymous);
 
   const [error, set_error] = useState('');
   const [loading, set_loading] = useState(false);
@@ -29,6 +30,12 @@ export default function Login_Screen() {
     set_loading(true);
 
     try {
+      // If currently anon, sign out first so the new login replaces the
+      // anon session cleanly. The anon row in User_Login_Data becomes
+      // orphaned — relies on the periodic anon-cleanup script.
+      if (is_anonymous) {
+        await supabase.auth.signOut({ scope: 'local' });
+      }
       const data = await api_login(username_or_email, password);
       await supabase.auth.setSession({ access_token: data.jwt, refresh_token: data.refresh_token });
       dispatch(login({ user: data.user }));
@@ -56,12 +63,13 @@ export default function Login_Screen() {
         error={error}
         loading={loading}
         go_to_signup={() => navigate('/signup')}
+        warn_lose_guest={is_anonymous}
       />
     </div>
   );
 }
 
-function Login_Panel({ on_submit, error, loading, go_to_signup }) {
+function Login_Panel({ on_submit, error, loading, go_to_signup, warn_lose_guest }) {
   const [username_or_email, set_username_or_email] = useState('');
   const [password, set_password] = useState('');
 
@@ -79,6 +87,11 @@ function Login_Panel({ on_submit, error, loading, go_to_signup }) {
       color: '#e0e0f0',
     }}>
       <h2 style={{ margin: '0 0 20px', color: '#facc15', fontSize: '32px', fontWeight: 'bold', textAlign: 'center' }}>Login</h2>
+      {warn_lose_guest && (
+        <p style={{ margin: '0 0 16px', color: '#facc15', fontSize: '13px', textAlign: 'center', lineHeight: 1.4 }}>
+          Logging in will discard your current guest progress. Sign up instead if you want to keep it.
+        </p>
+      )}
 
       <input
         type="text"

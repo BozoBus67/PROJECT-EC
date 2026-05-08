@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
 import { HashRouter } from 'react-router-dom';
-import Auth_Shell from './app_structure/auth_shell';
-import Game_Shell from './app_structure/game_shell';
+import Main_Shell from './app_structure/main_shell';
 import { api_me } from './auth';
 import { init_yt_player, load_playlist } from './music/audio_state';
 import { get, post_auth } from './shared/api_client';
@@ -38,13 +37,11 @@ function App_Inner() {
   const [checking_session, set_checking_session] = useState(true);
 
   useEffect(() => {
-    // Phase 3 startup. Two paths:
-    //   - No cached session → render Auth_Shell immediately, fetch metadata
-    //     in the background (Auth_Shell doesn't read it).
-    //   - Cached session → wait for /me to validate the JWT before flipping
-    //     the gate, since Game_Shell needs a logged-in user to render.
-    // Metadata always loads in the background regardless — by the time the
-    // user finishes typing their password, it's almost certainly done.
+    // Bootstrap fires both metadata + session in parallel. Metadata is
+    // fire-and-forget (no gate), session flips the loading screen off when
+    // it resolves. With anon-by-default, every visitor ends up with a
+    // session — only the "no anon, no real session" failure mode lands on
+    // the auth screens.
     bootstrap_metadata(dispatch);
     bootstrap_session(dispatch)
       .catch(err => console.error('[bootstrap] session restore failed:', err))
@@ -60,9 +57,7 @@ function App_Inner() {
     <HashRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Themed_Toaster />
       <Error_Boundary>
-        {checking_session
-          ? <Loading_Screen />
-          : (is_logged_in ? <Game_Shell /> : <Auth_Shell />)}
+        {checking_session ? <Loading_Screen /> : <Main_Shell />}
       </Error_Boundary>
     </HashRouter>
   );
@@ -128,12 +123,10 @@ function Themed_Toaster() {
   );
 }
 
-// Fetches the static metadata Game_Shell needs (account tiers, building defs,
-// music playlist). Fire-and-forget — Auth_Shell doesn't read any of these,
-// so we don't block the loading screen on them. By the time a user finishes
-// typing their password, these promises are virtually always done. Errors
-// don't propagate; they're logged for debugging and Game_Shell renders with
-// empty fallbacks (which is fine — the user can hit the refresh button).
+// Fetches the static metadata Main_Shell needs (account tiers, building defs,
+// music playlist). Fire-and-forget — the auth screens don't read any of
+// these, and Main_Shell renders with empty fallbacks if metadata fails (user
+// can hit the refresh button). Errors are logged for debugging only.
 //
 // Scroll metadata is NOT fetched here — it lives entirely in the frontend
 // registry at shared/scroll_registry.js. The backend's MASTERY_SCROLLS dict
@@ -153,18 +146,38 @@ async function bootstrap_metadata(dispatch) {
   }
 }
 
-// Validates the cached Supabase session (if any) against /me. Cleared session
-// → returns immediately so Auth_Shell renders right away. Cached-but-invalid
-// session → local-only sign-out so we don't make a doomed /logout call (see
-// auth/README.md).
+// Bootstraps a session for the user. Three paths:
+//
+//   - Cached session, /me succeeds → real or anon user comes back where they
+//     left off. Most common path on repeat visits.
+//   - Cached session, /me fails (typically stale JWT) → local-only sign-out
+//     so we don't make a doomed /logout call (see auth/README.md), then fall
+//     through to the no-session branch below.
+//   - No session → signInAnonymously so the user can play immediately
+//     without an account. Backend's /me auto-creates the User_Login_Data row.
+//
+// If signInAnonymously itself fails (e.g. anon auth not enabled in the
+// Supabase project), the bootstrap finishes with no session and Main_Shell
+// renders the auth screens instead — same fallback as before this change.
 async function bootstrap_session(dispatch) {
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return;
-  try {
-    const data = await api_me();
-    dispatch(login({ user: data.user }));
-    notify_migration(data.migration_info);
-  } catch {
-    await supabase.auth.signOut({ scope: 'local' });
+  if (session) {
+    try {
+      const data = await api_me();
+      dispatch(login({ user: data.user }));
+      notify_migration(data.migration_info);
+      return;
+    } catch {
+      await supabase.auth.signOut({ scope: 'local' });
+    }
   }
+
+  const { error: anon_error } = await supabase.auth.signInAnonymously();
+  if (anon_error) {
+    console.error('[bootstrap] anonymous sign-in failed:', anon_error);
+    return;
+  }
+  const data = await api_me();
+  dispatch(login({ user: data.user }));
+  notify_migration(data.migration_info);
 }

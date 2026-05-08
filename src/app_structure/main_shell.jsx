@@ -1,6 +1,8 @@
 import { lazy, Suspense } from 'react';
+import { useSelector } from 'react-redux';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { Auction_House_Screen } from '../auction_house';
+import { Login_Screen, Sign_Up_Screen } from '../auth';
 import { Main_Screen } from '../game';
 import { Mastery_Scrolls_Screen } from '../mastery_scrolls';
 import { Redeem_Tokens_Screen } from '../redeem';
@@ -13,13 +15,21 @@ import { Loading_Screen } from '../shared/components';
 const Chess_Screen = lazy(() => import('../chess/chess_screen'));
 const Chess_Game_Screen = lazy(() => import('../chess/chess_game_screen'));
 
-// Renders all routes available to a logged-IN user. App.jsx mounts this when
-// `is_logged_in` is true; any URL that isn't a known game route falls through
-// to the catch-all and redirects to /game.
-export default function Game_Shell() {
+// Single shell mounted by App.jsx after bootstrap. /game/* is always
+// reachable (anonymous Supabase users let guests play without an account);
+// /login + /signup are accessible to everyone via the top-bar Log In button.
+//
+// If bootstrap couldn't establish even an anonymous session, is_logged_in
+// is false and we render the auth screens as the only available routes —
+// covers the "anonymous sign-in is disabled in Supabase" failure mode.
+export default function Main_Shell() {
+  const is_logged_in = useSelector(state => state.session.is_logged_in);
+  if (!is_logged_in) return <No_Session_Shell />;
   return (
     <Suspense fallback={<Loading_Screen />}>
       <Routes>
+        <Route path="/login" element={<Login_Screen />} />
+        <Route path="/signup" element={<Sign_Up_Screen />} />
         <Route path="/game" element={<Main_Screen />} />
         <Route path="/game/settings" element={<Settings_Screen />} />
         <Route path="/game/settings/login-details" element={<Login_Details_Screen />} />
@@ -32,5 +42,15 @@ export default function Game_Shell() {
         <Route path="*" element={<Navigate to="/game" replace />} />
       </Routes>
     </Suspense>
+  );
+}
+
+function No_Session_Shell() {
+  return (
+    <Routes>
+      <Route path="/login" element={<Login_Screen />} />
+      <Route path="/signup" element={<Sign_Up_Screen />} />
+      <Route path="*" element={<Navigate to="/signup" replace />} />
+    </Routes>
   );
 }

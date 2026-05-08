@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Async_Refresh_Button, Modal_Overlay, Nav_Button } from '../../shared/components';
 import { ACCOUNT_TIER_NAMES } from '../../shared/constants';
-import { useCookiesGate, useEscapeKey, useTierGate } from '../../shared/hooks';
+import { useCookiesGate, useEscapeKey, useGuestGate, useTierGate } from '../../shared/hooks';
 
 const COOKIES_GATE = 1000;
 import { useTheme } from '../../shared/theme';
@@ -36,10 +36,11 @@ export default function Top_Bar({ on_gamble_click, on_roulette_click }) {
     }}>
       {cookies_lock_modal}
       <Account_Refresh_Button />
+      <Sign_In_Button />
       <Account_Tier_Display />
       <Token_Display />
       <Buy_Tokens_Button cookies_gate={cookies_gate} />
-      <Nav_Button label="Buy Premium" on_click={() => cookies_gate(() => navigate('/game/buy-premium'))} />
+      <Buy_Premium_Button cookies_gate={cookies_gate} />
       <Nav_Button label="Gamble Tokens" on_click={() => cookies_gate(on_gamble_click)} />
       <Nav_Button label="Roulette" on_click={() => cookies_gate(on_roulette_click)} />
       <Nav_Button label="Redeem Tokens" to="/game/redeem-tokens" />
@@ -48,6 +49,35 @@ export default function Top_Bar({ on_gamble_click, on_roulette_click }) {
       <Nav_Button label="Play Chess" on_click={() => cookies_gate(() => navigate('/game/play-chess'))} />
       <Audio_Controls />
     </div>
+  );
+}
+
+// Visible only for anonymous (guest) sessions. Routes to /signup so the
+// upgrade-anon flow takes over and converts the current guest into a
+// permanent account in place (preserves progress).
+function Sign_In_Button() {
+  const is_anonymous = useSelector(state => state.session.is_anonymous);
+  const navigate = useNavigate();
+  const theme = useTheme();
+  if (!is_anonymous) return null;
+  return (
+    <button
+      type="button"
+      onClick={() => navigate('/signup')}
+      style={{
+        padding: '6px 14px',
+        borderRadius: '6px',
+        background: theme.accent,
+        color: theme.accent_text,
+        border: 'none',
+        fontWeight: 'bold',
+        cursor: 'pointer',
+        fontSize: '13px',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      Log In / Sign Up
+    </button>
   );
 }
 
@@ -98,10 +128,26 @@ function Token_Display() {
 
 function Buy_Tokens_Button({ cookies_gate }) {
   const [show_modal, set_show_modal] = useState(false);
+  // Real-money flow — block guests with a sign-up nudge before they hit Stripe
+  // (no point sending tokens to an account that may vanish when the browser
+  // session expires).
+  const { gate: guest_gate, lock_modal: guest_lock_modal } = useGuestGate('Buy Tokens');
   return (
     <>
-      <Nav_Button label="Buy Tokens" on_click={() => cookies_gate(() => set_show_modal(true))} />
+      <Nav_Button label="Buy Tokens" on_click={() => cookies_gate(() => guest_gate(() => set_show_modal(true)))} />
+      {guest_lock_modal}
       {show_modal && <Buy_Tokens_Confirm_Modal on_close={() => set_show_modal(false)} />}
+    </>
+  );
+}
+
+function Buy_Premium_Button({ cookies_gate }) {
+  const navigate = useNavigate();
+  const { gate: guest_gate, lock_modal: guest_lock_modal } = useGuestGate('Buy Premium');
+  return (
+    <>
+      <Nav_Button label="Buy Premium" on_click={() => cookies_gate(() => guest_gate(() => navigate('/game/buy-premium')))} />
+      {guest_lock_modal}
     </>
   );
 }
