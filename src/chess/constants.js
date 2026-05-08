@@ -19,6 +19,7 @@
 //   1320–3190    →  same  (Stockfish's native range)
 //   > 3190       →  3190  (clamped, only Epstein hits this — by design)
 
+import { EPSTEIN_BOT_NAME } from '../shared/constants';
 import { useKirkifiedFace } from '../shared/kirkified_faces';
 import { SCROLL_FACE_PAIRS } from '../shared/scroll_faces';
 import { SCROLL_REGISTRY } from '../shared/scroll_registry';
@@ -39,7 +40,7 @@ const regular_bots = SCROLL_REGISTRY
 
 export const EPSTEIN_BOT = {
   id: EPSTEIN_BOT_ID,
-  name: 'Epstein',
+  name: EPSTEIN_BOT_NAME,
   elo: EPSTEIN_BOT_ELO,
 };
 

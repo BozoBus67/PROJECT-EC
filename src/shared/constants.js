@@ -86,6 +86,7 @@ const NSFW = (() => {
     },
     AD_TEXT: 'HOT GIRLS IN YOUR AREA WANT TO S3X',
     BAKERY_SUBSTITUTE_NAME: 'Island',
+    EPSTEIN_BOT_NAME: 'Epstein',
     ACCOUNT_TIER_NAMES: {
       account_tier_0: 'Free',
       account_tier_1: 'Plus',
@@ -154,7 +155,7 @@ const SFW = (() => {
       adolf_hitler:          'Not yet implemented',
       blurry_epstein:        `${QUANTITY_NAME} per second multiplied by 1000`,
       caseoh:                'Not yet implemented',
-      charlie_kirk:          'Unlocks Kirk Mode (toggle in settings) — kirkifies all clickbait ads',
+      charlie_kirk:          'Not yet implemented',
       dexter:                'Not yet implemented',
       diddy:                 'Grandma, Farm, and Mine production ×2500',
       doakes:                'Not yet implemented',
@@ -177,7 +178,8 @@ const SFW = (() => {
       walter_white:          'Not yet implemented',
     },
     AD_TEXT: 'HOT GIRLS IN YOUR AREA WANT TO S3X',
-    BAKERY_SUBSTITUTE_NAME: 'Island',
+    BAKERY_SUBSTITUTE_NAME: 'Bakery',
+    EPSTEIN_BOT_NAME: 'Master Cookie',
     ACCOUNT_TIER_NAMES: {
       account_tier_0: 'Free',
       account_tier_1: 'Plus',
@@ -201,6 +203,7 @@ export const SCROLL_DISPLAY_NAMES   = T.SCROLL_DISPLAY_NAMES;
 export const SCROLL_DESCRIPTIONS    = T.SCROLL_DESCRIPTIONS;
 export const AD_TEXT                = T.AD_TEXT;
 export const BAKERY_SUBSTITUTE_NAME = T.BAKERY_SUBSTITUTE_NAME;
+export const EPSTEIN_BOT_NAME       = T.EPSTEIN_BOT_NAME;
 export const ACCOUNT_TIER_NAMES     = T.ACCOUNT_TIER_NAMES;
 
 // Tier thresholds for owned-count → tier badge. Mechanics, not text — same in
