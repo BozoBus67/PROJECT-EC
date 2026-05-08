@@ -78,7 +78,14 @@ export default function Gamble_Modal({ on_close }) {
         type="button"
         onClick={on_close}
         disabled={is_spinning}
-        style={{ background: theme.button_neutral_bg, color: theme.button_neutral_text, border: 'none', borderRadius: '6px', padding: '8px 20px', cursor: is_spinning ? 'default' : 'pointer' }}
+        style={{
+          background: is_spinning ? theme.button_neutral_bg : theme.accent,
+          color: is_spinning ? theme.button_neutral_text : theme.accent_text,
+          border: 'none', borderRadius: '6px', padding: '8px 20px',
+          fontWeight: 'bold',
+          cursor: is_spinning ? 'default' : 'pointer',
+          opacity: is_spinning ? 0.5 : 1,
+        }}
       >
         Close
       </button>
