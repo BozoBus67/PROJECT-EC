@@ -10,7 +10,8 @@ export default function Cookies_Locked_Modal({ min, have, on_close }) {
     <Modal_Overlay panel_style={{ alignItems: 'center', textAlign: 'center', minWidth: '320px' }}>
       <h2 style={{ color: theme.accent, margin: 0 }}>🔒 Locked</h2>
       <p style={{ margin: 0 }}>
-        You need at least {min.toLocaleString()} {QUANTITY_NAME} to use this. You have {have.toLocaleString()}.
+        You need at least {min.toLocaleString()} {QUANTITY_NAME} to use this.
+        {have >= 100 && ` You have ${have.toLocaleString()}.`}
       </p>
       <button
         type="button"
