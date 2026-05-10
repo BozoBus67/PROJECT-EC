@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Async_Refresh_Button, Modal_Overlay, Nav_Button } from '../../shared/components';
 import { ACCOUNT_TIER_NAMES } from '../../shared/constants';
-import { useCookiesGate, useEscapeKey, useGuestGate, useTierGate } from '../../shared/hooks';
+import { useCookiesGate, useEscapeKey, useGuestGate } from '../../shared/hooks';
 
 const COOKIES_GATE = 1000;
 import { useTheme } from '../../shared/theme';
@@ -217,15 +217,14 @@ function Buy_Tokens_Confirm_Modal({ on_close }) {
   );
 }
 
+// Browsing the auction house is open to everyone (cookies-gated only).
+// The tier gate moved INTO auction_house_screen.jsx, where it now wraps
+// the buy and create-listing actions specifically — see Auction_House_Screen_Body
+// and Create_Listing_Manager. Free users can window-shop; only Pro+ can transact.
 function Auction_House_Nav_Button({ cookies_gate }) {
   const navigate = useNavigate();
-  const { gate: tier_gate, lock_modal } = useTierGate(2);
-  // Two stacked gates: cookies first (universal), then tier (auction-house-specific).
   return (
-    <>
-      <Nav_Button label="Auction House" on_click={() => cookies_gate(() => tier_gate(() => navigate('/game/auction-house')))} />
-      {lock_modal}
-    </>
+    <Nav_Button label="Auction House" on_click={() => cookies_gate(() => navigate('/game/auction-house'))} />
   );
 }
 

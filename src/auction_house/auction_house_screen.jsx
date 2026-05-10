@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
 import { Async_Refresh_Button, Confirm_Modal, Modal_Overlay, Subscreen } from '../shared/components';
-import { useEscapeKey } from '../shared/hooks';
+import { useEscapeKey, useTierGate } from '../shared/hooks';
 import { increment_game_data_field, update_game_data, update_premium_game_data } from '../shared/store/sessionSlice';
 import { supabase } from '../shared/supabase_client';
 import { useTheme } from '../shared/theme';
@@ -60,9 +60,17 @@ export default function Auction_House_Screen() {
 // Renders the listings grid AND owns the "which listing is selected" state plus the
 // resulting cancel/buy modal. The screen passes in the listings + a refresh callback;
 // nothing about selection leaks back up.
+//
+// Tier gate: clicking a listing opens buy/cancel — both are transactional, so
+// only Pro+ users get past the gate. Free users can still see the grid (the
+// tile already shows seller, amount, price), but clicking it surfaces the
+// tier-locked modal instead of the action modal. Cancel-own is moot here
+// because tier upgrades are one-way, so a free user can't have own listings
+// they need to cancel.
 function Auction_House_Screen_Body({ listings, on_action_done }) {
   const username = useSelector(state => state.session.session_data?.username ?? '');
   const [selected, set_selected] = useState(null);
+  const { gate: tier_gate, lock_modal } = useTierGate(2);
 
   const is_own = selected?.seller_username === username;
   const close = () => set_selected(null);
@@ -73,11 +81,12 @@ function Auction_House_Screen_Body({ listings, on_action_done }) {
       <div style={{ flex: 1, overflowY: 'auto', padding: '24px 40px' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
           {listings.map((listing, i) => (
-            <Auction_Slot key={listing.id ?? i} listing={listing} on_click={() => set_selected(listing)} />
+            <Auction_Slot key={listing.id ?? i} listing={listing} on_click={() => tier_gate(() => set_selected(listing))} />
           ))}
         </div>
       </div>
       <Manage_Listing_Modal listing={selected} is_own={is_own} on_close={close} on_done={finish} />
+      {lock_modal}
     </>
   );
 }
@@ -160,14 +169,19 @@ function Add_Auction_Button({ on_click }) {
 // Owns the Add Auction trigger button + the create-listing modal + the open/close state.
 // The screen mounts <Create_Listing_Manager /> once and forgets about it. After a
 // successful create, on_action_done fires so the caller can refresh the listings grid.
+//
+// Tier gate: free users can see the + Add Auction button, but clicking it
+// surfaces the tier-locked modal instead of the create form.
 function Create_Listing_Manager({ on_action_done }) {
   const [show, set_show] = useState(false);
+  const { gate: tier_gate, lock_modal } = useTierGate(2);
   const close = () => set_show(false);
   const finish = () => { close(); on_action_done(); };
   return (
     <>
-      <Add_Auction_Button on_click={() => set_show(true)} />
+      <Add_Auction_Button on_click={() => tier_gate(() => set_show(true))} />
       {show && <Create_Listing_Modal on_close={close} on_created={finish} />}
+      {lock_modal}
     </>
   );
 }
