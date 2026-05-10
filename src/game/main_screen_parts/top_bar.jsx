@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Async_Refresh_Button, Modal_Overlay, Nav_Button } from '../../shared/components';
 import { ACCOUNT_TIER_NAMES } from '../../shared/constants';
-import { useCookiesGate, useEscapeKey, useGuestGate } from '../../shared/hooks';
+import { useCookiesGate, useEscapeKey } from '../../shared/hooks';
 
 const COOKIES_GATE = 1000;
 import { useTheme } from '../../shared/theme';
@@ -128,14 +128,13 @@ function Token_Display() {
 
 function Buy_Tokens_Button({ cookies_gate }) {
   const [show_modal, set_show_modal] = useState(false);
-  // Real-money flow — block guests with a sign-up nudge before they hit Stripe
-  // (no point sending tokens to an account that may vanish when the browser
-  // session expires).
-  const { gate: guest_gate, lock_modal: guest_lock_modal } = useGuestGate('Buy Tokens');
+  // Anon allowed: Stripe's webhook resolves user_id from client_reference_id,
+  // which works for anon UUIDs. If the user signs up later, upgrade_anon
+  // preserves the tokens. If they nuke their browser before signing up they
+  // lose them — accepted trade-off for a smoother first-time-buyer flow.
   return (
     <>
-      <Nav_Button label="Buy Tokens" on_click={() => cookies_gate(() => guest_gate(() => set_show_modal(true)))} />
-      {guest_lock_modal}
+      <Nav_Button label="Buy Tokens" on_click={() => cookies_gate(() => set_show_modal(true))} />
       {show_modal && <Buy_Tokens_Confirm_Modal on_close={() => set_show_modal(false)} />}
     </>
   );

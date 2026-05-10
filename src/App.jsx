@@ -86,7 +86,10 @@ function use_active_ping(is_logged_in) {
     const ping = () => {
       if (cancelled) return;
       if (!is_active()) return;
-      post_auth('/active_ping').catch(() => {});
+      // Send URL + screen so PostHog's URL/SCREEN column populates and we
+      // can break active-time down by which subscreen the user was on.
+      // Hash router puts the route in `location.hash` (e.g. "#/game/auction-house").
+      post_auth('/active_ping', { url: window.location.href, screen: window.location.hash }).catch(() => {});
     };
     ping();
     const id = setInterval(ping, ACTIVE_PING_INTERVAL_MS);
