@@ -125,13 +125,23 @@ function Auction_Slot({ listing, on_click }) {
 }
 
 function Refresh_Listings_Button({ on_click }) {
+  const theme = useTheme();
   return (
     <Async_Refresh_Button
       on_click={on_click}
       success_message="Listings refreshed."
       error_message="Error: Failed to refresh listings."
       title="Refresh listings"
-      style={{ position: 'fixed', bottom: '24px', left: '24px' }}
+      size={44}
+      style={{
+        position: 'fixed', bottom: '24px', left: '24px',
+        border: `2px solid ${theme.accent}`,
+        background: theme.accent,
+        color: theme.accent_text ?? '#000',
+        fontWeight: 'bold',
+        lineHeight: 1,
+        boxShadow: `0 0 10px ${theme.accent}88, 0 2px 4px rgba(0,0,0,0.4)`,
+      }}
     />
   );
 }
