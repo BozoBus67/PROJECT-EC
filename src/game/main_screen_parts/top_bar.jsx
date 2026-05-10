@@ -141,14 +141,13 @@ function Buy_Tokens_Button({ cookies_gate }) {
   );
 }
 
+// No guest gate: Buy Premium spends in-game tokens, not real money, and the
+// anon user already has an account that owns those tokens. Sign-in only
+// matters for cross-device persistence; spending tokens locally is fine.
 function Buy_Premium_Button({ cookies_gate }) {
   const navigate = useNavigate();
-  const { gate: guest_gate, lock_modal: guest_lock_modal } = useGuestGate('Buy Premium');
   return (
-    <>
-      <Nav_Button label="Buy Premium" on_click={() => cookies_gate(() => guest_gate(() => navigate('/game/buy-premium')))} />
-      {guest_lock_modal}
-    </>
+    <Nav_Button label="Buy Premium" on_click={() => cookies_gate(() => navigate('/game/buy-premium'))} />
   );
 }
 
