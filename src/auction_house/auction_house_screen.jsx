@@ -70,7 +70,7 @@ export default function Auction_House_Screen() {
 function Auction_House_Screen_Body({ listings, on_action_done }) {
   const username = useSelector(state => state.session.session_data?.username ?? '');
   const [selected, set_selected] = useState(null);
-  const { gate: tier_gate, lock_modal } = useTierGate(2);
+  const { gate: tier_gate, lock_modal } = useTierGate(2, 'create and buy auction listings');
 
   const is_own = selected?.seller_username === username;
   const close = () => set_selected(null);
@@ -150,7 +150,7 @@ function Add_Auction_Button({ on_click }) {
         bottom: '24px',
         right: '24px',
         padding: '10px 20px',
-        background: hovered ? theme.accent : 'transparent',
+        background: hovered ? theme.accent : theme.panel,
         color: hovered ? theme.accent_text : theme.accent,
         border: `2px solid ${theme.accent}`,
         borderRadius: '8px',
@@ -174,7 +174,7 @@ function Add_Auction_Button({ on_click }) {
 // surfaces the tier-locked modal instead of the create form.
 function Create_Listing_Manager({ on_action_done }) {
   const [show, set_show] = useState(false);
-  const { gate: tier_gate, lock_modal } = useTierGate(2);
+  const { gate: tier_gate, lock_modal } = useTierGate(2, 'create and buy auction listings');
   const close = () => set_show(false);
   const finish = () => { close(); on_action_done(); };
   return (
