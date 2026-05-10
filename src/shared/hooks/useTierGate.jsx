@@ -3,7 +3,10 @@ import { useSelector } from 'react-redux';
 import { tier_num } from '../utils';
 import Tier_Locked_Modal from '../components/tier_locked_modal';
 
-export function useTierGate(required_tier) {
+// `feature_description` (optional): infinitive phrase shown in the lock
+// modal — "You must be Pro tier to {phrase}.". Omit for the generic
+// "...or higher for this." copy.
+export function useTierGate(required_tier, feature_description) {
   const tier = tier_num(useSelector(state => state.session.premium_game_data?.account_tier));
   const [show_lock, set_show_lock] = useState(false);
 
@@ -13,7 +16,7 @@ export function useTierGate(required_tier) {
   };
 
   const lock_modal = show_lock
-    ? <Tier_Locked_Modal required_tier={required_tier} on_close={() => set_show_lock(false)} />
+    ? <Tier_Locked_Modal required_tier={required_tier} feature_description={feature_description} on_close={() => set_show_lock(false)} />
     : null;
 
   return { gate, lock_modal };
