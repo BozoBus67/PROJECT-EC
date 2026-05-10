@@ -9,7 +9,7 @@ export default function Tier_Locked_Modal({ required_tier, feature_description, 
   useEscapeKey(on_close);
   const tier_name = ACCOUNT_TIER_NAMES[`account_tier_${required_tier}`];
   const message = feature_description
-    ? `You must be ${tier_name} tier to ${feature_description}.`
+    ? `You must be ${tier_name} tier or higher to ${feature_description}.`
     : `You must be ${tier_name} tier or higher for this.`;
   return (
     <div style={{

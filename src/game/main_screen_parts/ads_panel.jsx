@@ -7,7 +7,7 @@ import { ADS, AD_CLOSE_BUTTON_CORNERS, random_next_ad_index } from './main_body_
 import cc_bg from '../../assets/ui/cookie_clicker_background_art.jpg';
 
 export default function Ads_Panel() {
-  const { gate, lock_modal } = useTierGate(2);
+  const { gate, lock_modal } = useTierGate(2, 'close ads');
 
   const [index, set_index] = useState(() => Math.floor(Math.random() * ADS.length));
   const [corner, set_corner] = useState(() => Math.floor(Math.random() * AD_CLOSE_BUTTON_CORNERS.length));
