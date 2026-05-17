@@ -12,12 +12,13 @@ locals {
 resource "vercel_project" "frontend" {
   for_each = local.variants
 
-  name      = each.value.project_name
-  framework = "vite"
+  name           = each.value.project_name
+  framework      = "vite"
+  root_directory = "frontend"
 
   git_repository = {
     type              = "github"
-    repo              = "BozoBus67/Project-EC-Frontend"
+    repo              = "BozoBus67/PROJECT-EC"
     production_branch = "main"
   }
 

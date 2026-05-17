@@ -1,13 +1,14 @@
 resource "render_web_service" "backend" {
-  name          = "epstein_clicker_backend"
-  plan          = "free"
-  region        = "oregon"
-  start_command = "uvicorn main:app --host 0.0.0.0 --port $PORT"
+  name           = "epstein_clicker_backend"
+  plan           = "free"
+  region         = "oregon"
+  start_command  = "uvicorn main:app --host 0.0.0.0 --port $PORT"
+  root_directory = "backend"
 
   runtime_source = {
     native_runtime = {
-      repo_url            = "https://github.com/BozoBus67/Project-EC-Backend"
-      branch              = "master"
+      repo_url            = "https://github.com/BozoBus67/PROJECT-EC"
+      branch              = "main"
       runtime             = "python"
       build_command       = "pip install -r requirements.txt"
       auto_deploy         = true
@@ -28,3 +29,13 @@ resource "render_web_service" "backend" {
     STRIPE_WEBHOOK_SECRET = { value = var.stripe_webhook_secret }
   }
 }
+
+# KNOWN ISSUE — render-oss/terraform-provider-render#80 (open).
+# Any `terraform apply` that updates render_web_service.backend on a free-tier
+# service fails with "maintenance mode can only be configured for non-free tier
+# services". The provider always includes maintenance_mode in update payloads;
+# Render's API rejects any value (even disabled) on free tier. lifecycle.ignore_changes
+# does NOT help — it only stops drift detection, not outgoing fields.
+# Workaround until upstream fix or paid-tier upgrade: PATCH directly via Render's
+# REST API (curl + RENDER_API_KEY), then `terraform apply -refresh-only` to sync state.
+# Code deploys (git push → render webhook) are unaffected.
