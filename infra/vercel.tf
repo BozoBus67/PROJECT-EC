@@ -16,6 +16,12 @@ resource "vercel_project" "frontend" {
   framework      = "vite"
   root_directory = "frontend"
 
+  # Skip rebuild when push doesn't change anything in ./frontend. Uses
+  # VERCEL_GIT_PREVIOUS_SHA (Vercel-injected: SHA of last successful deploy for
+  # this project+branch) for accuracy across multi-commit pushes. Falls back to
+  # exit 1 (build) on first ever deploy when the var is unset.
+  ignore_command = "if [ -z \"$VERCEL_GIT_PREVIOUS_SHA\" ]; then exit 1; fi; git diff $VERCEL_GIT_PREVIOUS_SHA HEAD --quiet ./"
+
   git_repository = {
     type              = "github"
     repo              = "BozoBus67/PROJECT-EC"
