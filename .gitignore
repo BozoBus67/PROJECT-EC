@@ -1,0 +1,24 @@
+# macOS
+.DS_Store
+
+# Secrets / env files
+.env
+.env.*
+.envrc
+
+# Terraform — state and tfvars can contain credentials
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+crash.log
+crash.*.log
+*.tfplan
+
+# Ruby
+.bundle/
+vendor/bundle/
+
+# Large archived media — kept locally, never committed
+archived/music/

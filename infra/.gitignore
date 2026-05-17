@@ -1,0 +1,28 @@
+# Local .terraform directories (provider plugin cache, large, regenerable)
+.terraform/
+
+# State files — contain credentials and sensitive resource data, NEVER commit
+*.tfstate
+*.tfstate.*
+
+# Terraform crash logs
+crash.log
+crash.*.log
+
+# Variable definition files (often contain secrets)
+*.tfvars
+*.tfvars.json
+
+# Local overrides
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI plan output files
+*.tfplan
+
+# direnv / dotenv files (contain API tokens)
+.envrc
+.env
+.env.*
