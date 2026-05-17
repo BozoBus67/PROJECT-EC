@@ -1,0 +1,68 @@
+import os
+
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from supabase import create_client, ClientOptions
+
+from db.client import supabase
+from services.migrations import ensure_user_data_complete
+
+router = APIRouter()
+
+INVALID_CREDENTIALS = "Incorrect username/email or password"
+
+class LoginRequest(BaseModel):
+  username_or_email: str
+  password: str
+
+@router.post("/login")
+def login(body: LoginRequest):
+  # Why this endpoint exists at all (since Supabase auth is a separate service
+  # and the frontend could call signInWithPassword directly): we support login
+  # by either username or email. Username → email resolution requires reading
+  # User_Login_Data, which is RLS-locked to the service role only — so the
+  # frontend can't do this itself before the user has a JWT. We do the lookup
+  # here, then call Supabase's sign_in_with_password with the resolved email.
+  email = body.username_or_email
+
+  if "@" not in body.username_or_email:
+    row = supabase.table("User_Login_Data").select("id").eq("username", body.username_or_email).execute()
+    if not row.data:
+      raise HTTPException(status_code=401, detail=INVALID_CREDENTIALS)
+    auth_user = supabase.auth.admin.get_user_by_id(row.data[0]["id"])
+    if not auth_user.user:
+      raise HTTPException(status_code=500, detail="Account inconsistency — contact support")
+    email = auth_user.user.email
+
+  try:
+    # Use a fresh client for sign_in so it doesn't pollute the global client's session state
+    login_client = create_client(
+      os.getenv("SUPABASE_URL"),
+      os.getenv("SUPABASE_SECRET_KEY"),
+      options=ClientOptions(auto_refresh_token=False, persist_session=False),
+    )
+    auth_result = login_client.auth.sign_in_with_password({"email": email, "password": body.password})
+  except Exception as e:
+    print(f"[login] sign_in_with_password error: {e}")
+    msg = str(e)
+    if "Email not confirmed" in msg:
+      raise HTTPException(status_code=401, detail="Please confirm your email before logging in")
+    if "Invalid login credentials" in msg:
+      raise HTTPException(status_code=401, detail=INVALID_CREDENTIALS)
+    if any(k in msg.lower() for k in ("rate limit", "too many", "limit exceeded", "over_email_send_rate_limit")):
+      raise HTTPException(status_code=429, detail="Too many login attempts — try again later")
+    raise HTTPException(status_code=500, detail="An unknown error occurred — please try again")
+
+  user_id = auth_result.user.id
+  jwt = auth_result.session.access_token
+
+  ensure_user_data_complete(user_id)
+
+  result = supabase.table("User_Login_Data").select("*").eq("id", user_id).execute()
+  if not result.data:
+    raise HTTPException(status_code=404, detail="Account data not found — contact support")
+
+  user = result.data[0]
+  user["email"] = auth_result.user.email
+
+  return {"status": "ok", "jwt": jwt, "refresh_token": auth_result.session.refresh_token, "user": user}
