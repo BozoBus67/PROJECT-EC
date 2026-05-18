@@ -8,6 +8,26 @@ Each entry has the symptom, what was actually wrong, the fix, and the pattern to
 
 ---
 
+## 2026-05-18 — Auction cancel refund duplication (TOCTOU race)
+
+Symptom: Player created a listing, then fired ~30 cancel requests in parallel — received 30 refunds of the same listed items, duplicating tokens.
+
+Root cause: TOCTOU (time-of-check / time-of-use) race in `routers/auction_house.py:cancel_listing`. The handler did SELECT-to-check-existence-then-SELECT-to-check-ownership, then refunded via `add_tokens` / `add_cookies`, then DELETE'd. With 30 concurrent requests, all 30 hit the SELECTs before any reached the DELETE, so all 30 saw the listing as still active and owned by them, all 30 refunded, then all 30 attempted the DELETE (29 affected zero rows, but the refunds had already fired).
+
+Fix: Collapsed the existence check, ownership check, and state transition into a single atomic SQL DELETE — `DELETE FROM Auction_House WHERE id = $1 AND seller_username = $2 RETURNING *`. Postgres serializes DELETEs at the row level via implicit row locks, so only the first cancel returns a row and refunds; subsequent cancels see empty `result.data` and 409 without refunding. The check and the act are now one indivisible operation; there is no window between them.
+
+Watch for this pattern when:
+
+- An endpoint reads a row, checks something about it, then writes back / deletes based on the check.
+- The "check" requires the row to be in a specific state (active, available, owned by X, unsold, etc.) and the "act" transitions the row out of that state.
+- The same endpoint can fire multiple times in parallel for the same row — either by a malicious client (as here) or by a buggy frontend that retries.
+
+Same shape still exists in `buy_listing` (lines 63–91) — two concurrent buyers can both claim the same listing, duplicating the bought item on the buyer side. Not fixed in this commit because the buyer-pays-then-receives sequence needs rollback handling (if you spend-then-claim and lose the claim, you must refund; if you claim-then-spend and the buyer is broke, you must reinsert the listing). Treat as a separate fix.
+
+Difference from the 2026-05-09 entry: that was *lost update* (read-modify-write race losing increments on a JSON blob), this is *TOCTOU* (check-then-act race firing a side effect N times). Both are races, different shapes — lost update is fixed with a lock or atomic increment, TOCTOU is fixed by making the check and the act one atomic operation (the conditional DELETE here).
+
+---
+
 ## 2026-05-09 — Lost streak tokens on simultaneous checkin (race condition)
 
 Symptom: All three reward popups fired (daily 25 + hourly 5 + fivemin 1 = 31 expected) but the token bar showed only `1`. Refresh didn't help — the database itself only had 1 token.
