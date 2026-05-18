@@ -5,6 +5,17 @@ const STUCK_THRESHOLD_MS = 15_000;
 const SFW = import.meta.env.VITE_SFW === 'true';
 const sfw_loading_bg = SFW ? variant_asset('backgrounds', 'loading_screen') : null;
 
+// In SFW mode the cookie-clicker background is busy enough that grey body text
+// disappears into it. Swap to white text on a translucent grey rounded panel.
+const body_text_style = SFW
+  ? {
+      color: '#fff',
+      background: 'rgba(60,60,60,0.6)',
+      padding: '10px 16px',
+      borderRadius: '8px',
+    }
+  : { color: '#aaa' };
+
 export default function Loading_Screen() {
   // After STUCK_THRESHOLD_MS, surface a "still loading? refresh" affordance so
   // the user isn't pinned to this screen forever if a bootstrap fetch hangs.
@@ -34,12 +45,12 @@ export default function Loading_Screen() {
       padding: '0 24px',
     }}>
       <div>Restoring your session...</div>
-      <div style={{ fontSize: '13px', fontWeight: 'normal', color: '#aaa', letterSpacing: 0, maxWidth: '480px', lineHeight: 1.4 }}>
+      <div style={{ fontSize: '13px', fontWeight: 'normal', letterSpacing: 0, maxWidth: '480px', lineHeight: 1.4, ...body_text_style }}>
         Validating your login and pulling your save data from the backend.
       </div>
       {stuck && (
         <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-          <div style={{ fontSize: '13px', fontWeight: 'normal', color: '#aaa', letterSpacing: 0, maxWidth: '480px', lineHeight: 1.4 }}>
+          <div style={{ fontSize: '13px', fontWeight: 'normal', letterSpacing: 0, maxWidth: '480px', lineHeight: 1.4, ...body_text_style }}>
             Taking a while? The backend (Render) may be waking up from idle — that can take up to a minute on the free tier. If it doesn't load, try refreshing.
           </div>
           <button
