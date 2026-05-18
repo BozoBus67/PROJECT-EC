@@ -102,9 +102,7 @@ const NSFW = (() => {
   };
 })();
 
-// SFW values — resume / portfolio edition. AD_TEXT is intentionally identical
-// to NSFW (the "HOT GIRLS IN YOUR AREA WANT TO S3X" gag stays as the clickbait
-// joke regardless of edition — don't swap unless asked).
+// SFW values — resume / portfolio edition.
 const SFW = (() => {
   const QUANTITY_NAME = 'cookies';
   return {
@@ -178,7 +176,7 @@ const SFW = (() => {
       tung_tung_tung_sahur:  'Not yet implemented',
       walter_white:          'Not yet implemented',
     },
-    AD_TEXT: 'HOT GIRLS IN YOUR AREA WANT TO S3X',
+    AD_TEXT: 'HOT GIRLS IN YOUR AREA WANT TO DATE YOU!',
     BAKERY_SUBSTITUTE_NAME: 'Bakery',
     EPSTEIN_BOT_NAME: 'Master Cookie',
     ACCOUNT_TIER_NAMES: {
