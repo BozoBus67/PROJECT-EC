@@ -92,21 +92,22 @@ def buy_listing(body: ListingRequest, user=Depends(_REQUIRE_AUCTION_TIER)):
 
 @router.post("/cancel_listing")
 def cancel_listing(body: ListingRequest, user=Depends(_REQUIRE_AUCTION_TIER)):
-  listing_result = supabase.table("Auction_House").select("*").eq("id", body.listing_id).single().execute()
-  if not listing_result.data:
-    raise HTTPException(status_code=404, detail="Listing not found")
-  listing = listing_result.data
-
   user_row = supabase.table("User_Login_Data").select("username").eq("id", user.id).single().execute()
-  if user_row.data["username"] != listing["seller_username"]:
-    raise HTTPException(status_code=403, detail="You don't own this listing")
+  username = user_row.data["username"]
+
+  # Atomic check-and-act: the ownership predicate lives in the DELETE filter so
+  # Postgres serializes concurrent cancels — only the first returns a row, the
+  # rest see empty .data and noop. Without this, N parallel cancels each pass
+  # an independent SELECT check and N refunds fire (token duplication).
+  deleted = supabase.table("Auction_House").delete().eq("id", body.listing_id).eq("seller_username", username).execute()
+  if not deleted.data:
+    raise HTTPException(status_code=409, detail="Listing not found, not owned by you, or already cancelled")
+  listing = deleted.data[0]
 
   if listing["selling_item_type"] == "tokens":
     add_tokens(user.id, listing["amount"])
   elif listing["selling_item_type"] == "cookies":
     add_cookies(user.id, listing["amount"])
-
-  supabase.table("Auction_House").delete().eq("id", body.listing_id).execute()
 
   user_data = supabase.table("User_Login_Data").select("game_data, premium_game_data").eq("id", user.id).single().execute().data
   return {"status": "ok", "listing": listing, "game_data": user_data["game_data"], "premium_game_data": user_data["premium_game_data"]}
