@@ -104,10 +104,9 @@ const NSFW = (() => {
 
 // SFW values — resume / portfolio edition. AD_TEXT is intentionally identical
 // to NSFW (the "HOT GIRLS IN YOUR AREA WANT TO S3X" gag stays as the clickbait
-// joke regardless of edition — don't swap unless asked). QUANTITY_NAME is also
-// still the NSFW string; revisit if/when a clean substitute is decided.
+// joke regardless of edition — don't swap unless asked).
 const SFW = (() => {
-  const QUANTITY_NAME = 'children trafficked';
+  const QUANTITY_NAME = 'cookies';
   return {
     QUANTITY_NAME,
     BUILDING_NAMES: {
