@@ -176,7 +176,7 @@ const SFW = (() => {
       tung_tung_tung_sahur:  'Not yet implemented',
       walter_white:          'Not yet implemented',
     },
-    AD_TEXT: 'HOT GIRLS IN YOUR AREA WANT TO DATE YOU!',
+    AD_TEXT: 'HOT GIRLS IN YOUR AREA WANT TO MEET!',
     BAKERY_SUBSTITUTE_NAME: 'Bakery',
     EPSTEIN_BOT_NAME: 'Master Cookie',
     ACCOUNT_TIER_NAMES: {
