@@ -1,3 +1,3 @@
-module epstein_clicker/backend_go
+module project_ec/backend_go
 
 go 1.26.3

@@ -2,7 +2,7 @@
 
 # Backend
 
-FastAPI service backing the Epstein Clicker frontend. Talks to Supabase (Postgres + auth) and Stripe (purchases). Deployed on Render; the frontend talks to it over HTTPS.
+FastAPI service backing the Project EC frontend. Talks to Supabase (Postgres + auth) and Stripe (purchases). Deployed on Render; the frontend talks to it over HTTPS.
 
 ## Fail loud and early
 
