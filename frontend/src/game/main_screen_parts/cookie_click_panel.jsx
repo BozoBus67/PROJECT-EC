@@ -4,13 +4,13 @@ import * as Constants from '../../shared/constants';
 import { useAnimatedQuantity } from '../../shared/hooks';
 import { increase_cookies } from '../game_utils';
 import { variant_asset } from '../../shared/variant_assets';
+import { IS_NSFW } from '../../shared/variant';
 
-const SFW = import.meta.env.VITE_SFW === 'true';
 const epstein = variant_asset('backgrounds', 'epstein');
 const temple = variant_asset('backgrounds', 'epstein_island_temple_extended_sky');
 // Temple bg is dimmed in NSFW so the foreground reads against the busy art;
-// SFW's cookie-clicker background is already softer, so opacity stays at 1.
-const TEMPLE_BG_OPACITY = SFW ? 1 : 0.5;
+// non-NSFW backgrounds are already softer, so opacity stays at 1.
+const TEMPLE_BG_OPACITY = IS_NSFW ? 0.5 : 1;
 
 export default function Cookie_Click_Panel() {
   const quantity = useSelector(state => state.session.game_data?.quantity ?? 0);

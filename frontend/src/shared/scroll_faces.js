@@ -1,7 +1,8 @@
 // Scroll image lookup, keyed by slug. Convention: a file
 // `<variant>/master_scroll_faces/<slug>.<ext>` is the default face, where
-// `<variant>` is `extended/` (NSFW) or `cookie_clicker/` (SFW), selected via
-// VITE_SFW. An optional kirkified counterpart at
+// `<variant>` is one of `extended/` (NSFW), `cookie_clicker/` (SFW), or
+// `gemstone/` (GEMSTONE), selected via VITE_VARIANT with chain fallback
+// through cookie_clicker → extended. An optional kirkified counterpart at
 // `<variant>/master_scroll_faces_kirkified/<slug>_kirkified.<ext>` is paired
 // in automatically. Variant resolution: `variant_assets.js`. Pairing logic:
 // `kirkified_faces.js`.

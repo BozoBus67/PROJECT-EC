@@ -6,12 +6,12 @@ import { useEscapeKey } from '../shared/hooks';
 import { login } from '../shared/store/sessionSlice';
 import { supabase } from '../shared/supabase_client';
 import { variant_asset } from '../shared/variant_assets';
+import { IS_NSFW } from '../shared/variant';
 import { api_me, api_signup, api_upgrade_anon } from './api';
 
-// SFW reuses the loading-screen image as the auth background — there's no
-// separate SFW auth-bg asset. NSFW uses the original jeff blurry photo.
-const SFW = import.meta.env.VITE_SFW === 'true';
-const auth_background = variant_asset('backgrounds', SFW ? 'loading_screen' : 'jeffrey_epstein_blurry');
+// Non-NSFW variants reuse the loading-screen image as the auth background —
+// there's no separate auth-bg asset. NSFW uses the original jeff blurry photo.
+const auth_background = variant_asset('backgrounds', IS_NSFW ? 'jeffrey_epstein_blurry' : 'loading_screen');
 
 export default function Sign_Up_Screen() {
   const navigate = useNavigate();

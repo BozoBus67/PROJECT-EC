@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <defs>
+    <radialGradient id="gemCenter" cx="50%" cy="35%" r="55%">
+      <stop offset="0%"   stop-color="#ffffff"/>
+      <stop offset="40%"  stop-color="#a3d5ff"/>
+      <stop offset="100%" stop-color="#1e4d99"/>
+    </radialGradient>
+    <linearGradient id="gemRight" x1="0" y1="0" x2="1" y2="0.5">
+      <stop offset="0" stop-color="#5fa0e0"/>
+      <stop offset="1" stop-color="#142b66"/>
+    </linearGradient>
+    <linearGradient id="gemLeft" x1="1" y1="0" x2="0" y2="0.5">
+      <stop offset="0" stop-color="#5fa0e0"/>
+      <stop offset="1" stop-color="#142b66"/>
+    </linearGradient>
+  </defs>
+
+  <circle cx="200" cy="220" r="170" fill="#000" opacity="0.35"/>
+
+  <polygon points="200,40 320,150 200,380 80,150"
+           fill="url(#gemCenter)"
+           stroke="#0a1a4a"
+           stroke-width="4"/>
+
+  <polygon points="200,40 320,150 200,150" fill="url(#gemRight)" opacity="0.55"/>
+  <polygon points="200,40 80,150  200,150" fill="url(#gemLeft)"  opacity="0.55"/>
+
+  <line x1="200" y1="40"  x2="200" y2="380" stroke="#0a1a4a" stroke-width="2" opacity="0.5"/>
+  <line x1="80"  y1="150" x2="320" y2="150" stroke="#0a1a4a" stroke-width="2" opacity="0.5"/>
+  <line x1="200" y1="150" x2="140" y2="265" stroke="#0a1a4a" stroke-width="1.5" opacity="0.4"/>
+  <line x1="200" y1="150" x2="260" y2="265" stroke="#0a1a4a" stroke-width="1.5" opacity="0.4"/>
+  <line x1="140" y1="265" x2="260" y2="265" stroke="#0a1a4a" stroke-width="1.5" opacity="0.4"/>
+
+  <polygon points="200,40 130,140 200,150" fill="#ffffff" opacity="0.55"/>
+  <polygon points="200,150 145,250 200,200" fill="#ffffff" opacity="0.25"/>
+</svg>

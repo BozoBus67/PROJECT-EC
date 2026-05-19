@@ -2,9 +2,15 @@ locals {
   variants = {
     ec = {
       project_name = "epstein-clicker-frontend"
+      variant_id   = "nsfw"
     }
     sfw = {
       project_name = "epstein-clicker-frontend-sfw-version"
+      variant_id   = "sfw"
+    }
+    gemstone = {
+      project_name = "gemstone-clicker-frontend"
+      variant_id   = "gemstone"
     }
   }
 }
@@ -41,12 +47,19 @@ resource "vercel_project" "frontend" {
   }
 }
 
-# Only the SFW variant gets VITE_SFW=true. EC variant has no VITE_SFW; React code
-# (constants.js et al) defaults to NSFW/EC when import.meta.env.VITE_SFW !== 'true'.
-resource "vercel_project_environment_variable" "sfw_flag" {
-  project_id = vercel_project.frontend["sfw"].id
-  key        = "VITE_SFW"
-  value      = "true"
+# VITE_VARIANT — selects which edition the frontend renders. Read by
+# shared/variant.js (which exports VARIANT + IS_NSFW for the rest of the app).
+# Set per-project: 'nsfw' for the EC deployment, 'sfw' for the portfolio
+# build, 'gemstone' for the gem parody.
+#
+# Renamed 2026-05-18 from VITE_SFW (boolean) to VITE_VARIANT (enum) to support
+# 3+ variants without adding more boolean flags. TF apply will destroy the old
+# VITE_SFW env var on the SFW project and create VITE_VARIANT on all three.
+resource "vercel_project_environment_variable" "variant_flag" {
+  for_each   = local.variants
+  project_id = vercel_project.frontend[each.key].id
+  key        = "VITE_VARIANT"
+  value      = each.value.variant_id
   target     = ["production", "preview"]
   sensitive  = true
 }
