@@ -1,7 +1,7 @@
 locals {
   variants = {
     ec = {
-      project_name = "epstein-clicker-frontend"
+      project_name = "project-ec"
       variant_id   = "nsfw"
     }
     sfw = {
@@ -9,7 +9,7 @@ locals {
       variant_id   = "sfw"
     }
     gemstone = {
-      project_name = "gemstone-clicker-frontend"
+      project_name = "gemstone-clicker"
       variant_id   = "gemstone"
     }
   }
