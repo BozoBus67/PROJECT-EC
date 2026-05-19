@@ -15,8 +15,6 @@
     </linearGradient>
   </defs>
 
-  <circle cx="200" cy="220" r="170" fill="#000" opacity="0.35"/>
-
   <polygon points="200,40 320,150 200,380 80,150"
            fill="url(#gemCenter)"
            stroke="#0a1a4a"

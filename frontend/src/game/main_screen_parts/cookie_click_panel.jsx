@@ -38,7 +38,7 @@ export default function Cookie_Click_Panel() {
   const remove_particle = (id) => set_particles(prev => prev.filter(p => p.id !== id));
 
   return (
-    <div ref={panel_ref} style={{ flex: '1 1 0', height: '100%', position: 'relative', background: '#fff', borderRight: '2px solid #facc15' }}>
+    <div ref={panel_ref} style={{ flex: '1 1 0', height: '100%', position: 'relative', background: '#fff', borderRight: '2px solid #000' }}>
       <img src={temple} draggable={false} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 60%', opacity: TEMPLE_BG_OPACITY, pointerEvents: 'none' }} />
       <div style={{ position: 'relative', textAlign: 'center', width: '100%', paddingTop: '10px' }}>
         <div style={{ position: 'absolute', top: '110px', left: '50%', transform: 'translateX(-50%)', zIndex: 0 }}>

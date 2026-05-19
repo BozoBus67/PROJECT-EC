@@ -5,7 +5,7 @@ locals {
       variant_id   = "nsfw"
     }
     sfw = {
-      project_name = "epstein-clicker-frontend-sfw-version"
+      project_name = "extended-cookie-clicker"
       variant_id   = "sfw"
     }
     gemstone = {
