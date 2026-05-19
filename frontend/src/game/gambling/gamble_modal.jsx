@@ -46,6 +46,18 @@ export default function Gamble_Modal({ on_close }) {
     }
   };
 
+  // Preload every scroll face on mount so the rapid src swaps during a spin
+  // resolve from the browser cache instantly. Without this, the final face of
+  // a slot can arrive after the spin loop ends — the <img> keeps showing the
+  // previous frame in the meantime, and if that stale frame happens to match
+  // other slots' final faces, the player reads it as a win that never was.
+  useEffect(() => {
+    for (const pair of Object.values(SCROLL_FACE_PAIRS)) {
+      if (pair?.original)  { const img = new Image(); img.src = pair.original; }
+      if (pair?.kirkified) { const img = new Image(); img.src = pair.kirkified; }
+    }
+  }, []);
+
   useEffect(() => {
     if (frame === null || !sequences) return;
     if (frame >= sequences[0].length) {
