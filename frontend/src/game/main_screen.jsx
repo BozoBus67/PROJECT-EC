@@ -17,10 +17,12 @@ import Top_Bar from './main_screen_parts/top_bar';
 export default function Main_Screen() {
   const dispatch = useDispatch();
   const is_logged_in = useSelector(state => state.session.is_logged_in);
+  const is_online = useSelector(state => state.session.is_online);
   const game_data = useSelector(state => state.session.game_data);
   const premium_game_data = useSelector(state => state.session.premium_game_data);
 
   const game_data_ref = useRef(game_data);
+  const is_online_ref = useRef(is_online);
   const [daily_reward_data, set_daily_reward_data] = useState(null);
   const [hourly_reward_data, set_hourly_reward_data] = useState(null);
   const [fivemin_reward_data, set_fivemin_reward_data] = useState(null);
@@ -28,14 +30,17 @@ export default function Main_Screen() {
   const [show_roulette, set_show_roulette] = useState(false);
 
   const trigger_save = async () => {
-    try {
-      await save_game_data();
-      toast.success('Game saved!');
-    } catch (e) {
+    const result = await save_game_data();
+    if (result.remote) {
+      toast.success('Game saved!', { id: 'save-status' });
+    } else if (result.error) {
       // Auto-save fires every minute, so dedupe via toast id — a single
-      // persistent error indicator is better than 60 stacked failure toasts
-      // when the network is flaky.
-      toast.error(e?.detail || 'Error: Save failed.', { id: 'save-error' });
+      // persistent error indicator is better than 60 stacked failure toasts.
+      toast.error(result.error?.detail || 'Error: Save failed.', { id: 'save-status' });
+    } else {
+      // Network-only failure: local save succeeded, backend just isn't
+      // reachable. No data lost, no urgency — just tell the user it'll sync.
+      toast('Saved locally — will sync when backend is back.', { id: 'save-status', icon: '📦' });
     }
   };
 
@@ -43,6 +48,10 @@ export default function Main_Screen() {
   useEffect(() => {
     game_data_ref.current = game_data;
   }, [game_data]);
+
+  useEffect(() => {
+    is_online_ref.current = is_online;
+  }, [is_online]);
 
   // CPS depends on building counts and on which scrolls the user owns.
   // Recalc whenever either changes — without this, scroll-driven buffs (e.g.
@@ -76,14 +85,18 @@ export default function Main_Screen() {
 
   // Daily check-in: fire on mount + on tab visibility regain. Recurring, so
   // the failure toast uses a fixed id to dedupe repeated network blips.
+  // Skipped entirely when offline — checkins require the backend, and there's
+  // nothing for the user to do about a backend cold-start except wait.
   useEffect(() => {
     const do_checkin = async () => {
       if (document.hidden) return;
+      if (!is_online_ref.current) return;
       try {
         const data = await api_daily_checkin();
         if (!data.already_checked_in) set_daily_reward_data(data);
         if (data.premium_game_data) dispatch(update_premium_game_data(data.premium_game_data));
       } catch (e) {
+        if (e?.is_network_error) return;
         toast.error(e?.detail || 'Error: Daily check-in failed.', { id: 'daily-checkin-error' });
       }
     };
@@ -97,11 +110,13 @@ export default function Main_Screen() {
   useEffect(() => {
     const do_checkin = async (api_fn, set_reward, error_id) => {
       if (document.hidden) return;
+      if (!is_online_ref.current) return;
       try {
         const data = await api_fn();
         if (!data.already_checked_in) set_reward(data);
         if (data.premium_game_data) dispatch(update_premium_game_data(data.premium_game_data));
       } catch (e) {
+        if (e?.is_network_error) return;
         toast.error(e?.detail || 'Error: Check-in failed.', { id: error_id });
       }
     };
@@ -152,8 +167,20 @@ export default function Main_Screen() {
       {show_roulette && <Roulette_Modal on_close={() => set_show_roulette(false)} />}
       <Section name="top bar">
         <Top_Bar
-          on_gamble_click={() => set_show_gamble(true)}
-          on_roulette_click={() => set_show_roulette(true)}
+          on_gamble_click={() => {
+            if (!is_online) {
+              toast('Gambling needs the backend — try again once it\'s back.', { id: 'feature-offline', icon: '📦' });
+              return;
+            }
+            set_show_gamble(true);
+          }}
+          on_roulette_click={() => {
+            if (!is_online) {
+              toast('Gambling needs the backend — try again once it\'s back.', { id: 'feature-offline', icon: '📦' });
+              return;
+            }
+            set_show_roulette(true);
+          }}
         />
       </Section>
       <Section name="main body" fill>

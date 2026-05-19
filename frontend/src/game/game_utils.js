@@ -1,4 +1,5 @@
 import { apply_building_buffs, apply_global_modifiers } from '../mastery_scrolls/scroll_effects';
+import { cache_game_data } from '../shared/local_cache';
 import { store } from '../shared/store';
 import {
   increment_game_data_field,
@@ -54,10 +55,22 @@ export function buy_building(key) {
   recalculate_cps();
 }
 
-// Throws on failure — the caller decides how to surface the error to the user.
-// This is intentional: a save fail is something the user must know about,
-// because continuing to play after a failed save risks losing progress.
+// Returns { local: true, remote: boolean, error?: Error }. Always writes to
+// localStorage first (so play continues seamlessly when Render is cold) and
+// then attempts the backend POST. A network failure on the POST is swallowed
+// here — local save succeeded, so the user hasn't lost anything; the next
+// auto-save tick that happens after the backend wakes up will push the same
+// state up. Non-network errors (4xx/5xx with a real response) still bubble
+// in `error` so the caller can decide whether to surface them.
 export async function save_game_data() {
   const { game_data } = store.getState().session;
-  await api_save_game(JSON.parse(JSON.stringify(game_data)));
+  const snapshot = JSON.parse(JSON.stringify(game_data));
+  cache_game_data(snapshot);
+  try {
+    await api_save_game(snapshot);
+    return { local: true, remote: true };
+  } catch (err) {
+    if (err?.is_network_error) return { local: true, remote: false };
+    return { local: true, remote: false, error: err };
+  }
 }

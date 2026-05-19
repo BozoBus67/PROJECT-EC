@@ -10,6 +10,11 @@ const sessionSlice = createSlice({
     premium_game_data: null,
     account_tiers: [],
     buildings: {},
+    // Reflects backend reachability. Flipped by shared/api_client.js on every
+    // request based on whether the fetch resolved or threw a network error.
+    // Consumed by feature buttons that need the backend (gambling, auction,
+    // checkins) so they can decline to fire and tell the user to wait.
+    is_online: true,
   },
   reducers: {
     login(state, action) {
@@ -66,6 +71,13 @@ const sessionSlice = createSlice({
     patch_session_data(state, action) {
       if (state.session_data) Object.assign(state.session_data, action.payload);
     },
+    set_online(state, action) {
+      // No-op when unchanged so we don't re-render every consumer on each
+      // successful API call (most of them, since we dispatch this from the
+      // request layer on every fetch).
+      if (state.is_online === action.payload) return;
+      state.is_online = action.payload;
+    },
   },
 });
 
@@ -81,6 +93,7 @@ export const {
   set_account_tiers,
   set_buildings,
   patch_session_data,
+  set_online,
 } = sessionSlice.actions;
 
 export default sessionSlice.reducer;

@@ -7,10 +7,18 @@ import { api_me } from './auth';
 import { init_yt_player, load_playlist } from './music/audio_state';
 import { get, post_auth } from './shared/api_client';
 import { Env_Config_Error, Error_Boundary, Loading_Screen } from './shared/components';
-import { login, set_account_tiers, set_buildings } from './shared/store/sessionSlice';
+import {
+  cache_account_tiers, cache_buildings, cache_game_data, cache_premium_game_data, cache_session_data,
+  read_account_tiers, read_buildings, read_game_data, read_premium_game_data, read_session_data,
+} from './shared/local_cache';
+import { login, set_account_tiers, set_buildings, set_online } from './shared/store/sessionSlice';
 import { supabase } from './shared/supabase_client';
 import { useTheme } from './shared/theme';
 import { notify_migration } from './shared/utils';
+import {
+  DEFAULT_ACCOUNT_TIERS, DEFAULT_BUILDINGS, DEFAULT_GAME_DATA, DEFAULT_PREMIUM_GAME_DATA,
+} from './shared/zero_state';
+import toast from 'react-hot-toast';
 
 const ACTIVE_PING_INTERVAL_MS = 60_000;
 
@@ -144,8 +152,18 @@ async function bootstrap_metadata(dispatch) {
     ]);
     dispatch(set_account_tiers(account_tiers));
     dispatch(set_buildings(buildings));
+    cache_account_tiers(account_tiers);
+    cache_buildings(buildings);
   } catch (err) {
     console.error('[bootstrap] metadata fetch failed:', err);
+    // Catalog is static-ish reference data, fine to hydrate from a stale cache
+    // (or the baked-in defaults for a brand-new visitor on first cold-start).
+    // Without this fallback, the game would render with no buildings and the
+    // Buy buttons would silently do nothing.
+    const cached_tiers = read_account_tiers() ?? DEFAULT_ACCOUNT_TIERS;
+    const cached_buildings = read_buildings() ?? DEFAULT_BUILDINGS;
+    dispatch(set_account_tiers(cached_tiers));
+    dispatch(set_buildings(cached_buildings));
   }
 }
 
@@ -162,29 +180,79 @@ async function bootstrap_metadata(dispatch) {
 // If signInAnonymously itself fails (e.g. anon auth not enabled in the
 // Supabase project), the bootstrap finishes with no session and Main_Shell
 // renders the auth screens instead — same fallback as before this change.
+// Resolve api_me + cache the result, or — if api_me failed because the
+// backend was unreachable — hydrate the session from localStorage (falling
+// back to zero-state defaults on a first-ever cold start). Returns true if
+// the session was successfully resolved one way or the other.
+function login_from_api(dispatch, data) {
+  dispatch(login({ user: data.user }));
+  cache_session_data(data.user);
+  cache_game_data(data.user.game_data);
+  cache_premium_game_data(data.user.premium_game_data ?? null);
+  notify_migration(data.migration_info);
+  redirect_away_from_stale_auth_hash();
+}
+
+function login_from_cache_or_zero(dispatch, { is_anonymous }) {
+  const cached_session = read_session_data();
+  const cached_game_data = read_game_data();
+  const cached_pgd = read_premium_game_data();
+  const user = {
+    ...(cached_session ?? { id: 'offline_guest', is_anonymous: !!is_anonymous }),
+    game_data: cached_game_data ?? DEFAULT_GAME_DATA,
+    premium_game_data: cached_pgd ?? DEFAULT_PREMIUM_GAME_DATA,
+  };
+  dispatch(login({ user }));
+  dispatch(set_online(false));
+  toast(
+    cached_session
+      ? 'Playing offline — backend is waking up. Your progress will sync when it\'s back.'
+      : 'Backend is waking up — starting a local game. Progress will sync once it\'s up.',
+    { id: 'offline-mode', icon: '📦', duration: 6000 }
+  );
+}
+
 async function bootstrap_session(dispatch) {
   const { data: { session } } = await supabase.auth.getSession();
   if (session) {
     try {
       const data = await api_me();
-      dispatch(login({ user: data.user }));
-      notify_migration(data.migration_info);
-      redirect_away_from_stale_auth_hash();
+      login_from_api(dispatch, data);
       return;
-    } catch {
+    } catch (err) {
+      if (err?.is_network_error) {
+        // Backend unreachable on cold start: keep the existing Supabase
+        // session and play from cache. Skip the JWT sign-out path below — the
+        // JWT is fine, the backend just isn't answering yet.
+        login_from_cache_or_zero(dispatch, { is_anonymous: false });
+        return;
+      }
+      // Non-network failure typically means stale JWT — sign out locally and
+      // fall through to the anon flow so we don't make a doomed /logout call.
+      // See auth/README.md for why scope: 'local'.
       await supabase.auth.signOut({ scope: 'local' });
     }
   }
 
   const { error: anon_error } = await supabase.auth.signInAnonymously();
   if (anon_error) {
+    // Supabase auth itself is down — no JWT, but we can still let the user
+    // play locally if anything is cached. Brand-new visitor in this state
+    // gets the zero-state defaults.
     console.error('[bootstrap] anonymous sign-in failed:', anon_error);
+    login_from_cache_or_zero(dispatch, { is_anonymous: true });
     return;
   }
-  const data = await api_me();
-  dispatch(login({ user: data.user }));
-  notify_migration(data.migration_info);
-  redirect_away_from_stale_auth_hash();
+  try {
+    const data = await api_me();
+    login_from_api(dispatch, data);
+  } catch (err) {
+    if (err?.is_network_error) {
+      login_from_cache_or_zero(dispatch, { is_anonymous: true });
+      return;
+    }
+    throw err;
+  }
 }
 
 // HashRouter persists the URL across refreshes — so a hash of `#/signup` or
