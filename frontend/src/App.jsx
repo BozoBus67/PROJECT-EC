@@ -5,12 +5,14 @@ import { HashRouter } from 'react-router-dom';
 import Main_Shell from './app_structure/main_shell';
 import { api_me } from './auth';
 import { init_yt_player, load_playlist } from './music/audio_state';
+import { save_game_data } from './game/game_utils';
 import { get, post_auth } from './shared/api_client';
 import { Env_Config_Error, Error_Boundary, Loading_Screen } from './shared/components';
 import {
   cache_account_tiers, cache_buildings, cache_game_data, cache_premium_game_data, cache_session_data,
   read_account_tiers, read_buildings, read_game_data, read_premium_game_data, read_session_data,
 } from './shared/local_cache';
+import { store } from './shared/store';
 import { login, set_account_tiers, set_buildings, set_online } from './shared/store/sessionSlice';
 import { supabase } from './shared/supabase_client';
 import { useTheme } from './shared/theme';
@@ -21,6 +23,14 @@ import {
 import toast from 'react-hot-toast';
 
 const ACTIVE_PING_INTERVAL_MS = 60_000;
+// Bootstrap waits this long for api_me before falling back to offline mode.
+// Browser fetch has no default timeout — without this, the loading screen
+// would sit there for the full Render cold-start (up to ~60s).
+const BOOTSTRAP_API_TIMEOUT_MS = 3_000;
+// While in offline mode, retry api_me on this cadence until it succeeds.
+// Each attempt is itself bounded by BOOTSTRAP_API_TIMEOUT_MS so a hung backend
+// doesn't pile up in-flight requests.
+const RECONNECT_POLL_INTERVAL_MS = 5_000;
 
 // Required env vars whose absence renders the app unusable. App-breaking, so
 // we fail loud with a full-screen overlay rather than getting stuck on the
@@ -145,11 +155,14 @@ function Themed_Toaster() {
 // time), but the user-facing strings live frontend-side.
 async function bootstrap_metadata(dispatch) {
   try {
-    const [account_tiers, buildings] = await Promise.all([
-      get('/account_tiers'),
-      get('/get_building_metadata'),
-      load_playlist(),
-    ]);
+    const [account_tiers, buildings] = await with_timeout(
+      Promise.all([
+        get('/account_tiers'),
+        get('/get_building_metadata'),
+        load_playlist(),
+      ]),
+      BOOTSTRAP_API_TIMEOUT_MS,
+    );
     dispatch(set_account_tiers(account_tiers));
     dispatch(set_buildings(buildings));
     cache_account_tiers(account_tiers);
@@ -159,7 +172,9 @@ async function bootstrap_metadata(dispatch) {
     // Catalog is static-ish reference data, fine to hydrate from a stale cache
     // (or the baked-in defaults for a brand-new visitor on first cold-start).
     // Without this fallback, the game would render with no buildings and the
-    // Buy buttons would silently do nothing.
+    // Buy buttons would silently do nothing. The reconnect-polling loop in
+    // bootstrap_session will eventually pull the live catalog when Render
+    // wakes up; until then, the cached/default values keep the game playable.
     const cached_tiers = read_account_tiers() ?? DEFAULT_ACCOUNT_TIERS;
     const cached_buildings = read_buildings() ?? DEFAULT_BUILDINGS;
     dispatch(set_account_tiers(cached_tiers));
@@ -180,6 +195,54 @@ async function bootstrap_metadata(dispatch) {
 // If signInAnonymously itself fails (e.g. anon auth not enabled in the
 // Supabase project), the bootstrap finishes with no session and Main_Shell
 // renders the auth screens instead — same fallback as before this change.
+// Wrap any promise in a timeout that throws a shaped network-style error.
+// We treat timeout-to-respond identically to "Cannot reach server" because for
+// the bootstrap UX the user can't tell the difference — both mean "Render is
+// still cold". Without an explicit timeout, browser fetch has no default cap
+// and the loading screen would sit there for the full cold-start (~60s).
+function with_timeout(promise, timeout_ms) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => {
+      const err = new Error('Bootstrap timeout — backend is taking too long.');
+      err.is_network_error = true;
+      reject(err);
+    }, timeout_ms)),
+  ]);
+}
+
+const api_me_with_timeout = (timeout_ms) => with_timeout(api_me(), timeout_ms);
+
+// Once we've fallen back to offline mode, keep trying api_me on a slow
+// cadence. When it eventually succeeds (Render finished waking up), pull
+// server-authoritative state (session_data + premium_game_data) but PRESERVE
+// the local game_data — the user may have made progress while offline and the
+// in-memory snapshot is what they actually see on screen. Force-save right
+// after so we push that local progress to the backend without waiting up to
+// a minute for the auto-save tick.
+function start_reconnect_polling(dispatch) {
+  let cancelled = false;
+  async function attempt() {
+    if (cancelled) return;
+    try {
+      const data = await api_me_with_timeout(BOOTSTRAP_API_TIMEOUT_MS);
+      const local_game_data = store.getState().session.game_data;
+      dispatch(login({ user: { ...data.user, game_data: local_game_data } }));
+      cache_session_data(data.user);
+      cache_premium_game_data(data.user.premium_game_data ?? null);
+      toast.success('Backend is back — syncing progress.', { id: 'offline-mode' });
+      save_game_data().catch(err => console.warn('[reconnect] sync push failed:', err));
+      // Refresh metadata too — if the user bootstrapped from DEFAULT_BUILDINGS
+      // (brand-new visitor with no cache), this populates the cache with the
+      // live catalog so subsequent loads have the freshest data.
+      bootstrap_metadata(dispatch).catch(() => {});
+    } catch {
+      setTimeout(attempt, RECONNECT_POLL_INTERVAL_MS);
+    }
+  }
+  attempt();
+}
+
 // Resolve api_me + cache the result, or — if api_me failed because the
 // backend was unreachable — hydrate the session from localStorage (falling
 // back to zero-state defaults on a first-ever cold start). Returns true if
@@ -216,7 +279,7 @@ async function bootstrap_session(dispatch) {
   const { data: { session } } = await supabase.auth.getSession();
   if (session) {
     try {
-      const data = await api_me();
+      const data = await api_me_with_timeout(BOOTSTRAP_API_TIMEOUT_MS);
       login_from_api(dispatch, data);
       return;
     } catch (err) {
@@ -225,6 +288,7 @@ async function bootstrap_session(dispatch) {
         // session and play from cache. Skip the JWT sign-out path below — the
         // JWT is fine, the backend just isn't answering yet.
         login_from_cache_or_zero(dispatch, { is_anonymous: false });
+        start_reconnect_polling(dispatch);
         return;
       }
       // Non-network failure typically means stale JWT — sign out locally and
@@ -244,11 +308,12 @@ async function bootstrap_session(dispatch) {
     return;
   }
   try {
-    const data = await api_me();
+    const data = await api_me_with_timeout(BOOTSTRAP_API_TIMEOUT_MS);
     login_from_api(dispatch, data);
   } catch (err) {
     if (err?.is_network_error) {
       login_from_cache_or_zero(dispatch, { is_anonymous: true });
+      start_reconnect_polling(dispatch);
       return;
     }
     throw err;
