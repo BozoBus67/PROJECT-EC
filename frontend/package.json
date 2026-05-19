@@ -2,7 +2,7 @@
   "name": "project_ec_react",
   "productName": "project_ec_react",
   "version": "1.0.0",
-  "description": "Epstein Clicker - React version",
+  "description": "Project EC - React version",
   "main": ".vite/build/main.js",
   "private": true,
   "scripts": {
