@@ -1,5 +1,5 @@
 resource "render_web_service" "backend" {
-  name           = "epstein_clicker_backend"
+  name           = "project_ec_backend"
   plan           = "free"
   region         = "oregon"
   start_command  = "uvicorn main:app --host 0.0.0.0 --port $PORT"
