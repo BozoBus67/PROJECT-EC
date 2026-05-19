@@ -275,7 +275,31 @@ function login_from_cache_or_zero(dispatch, { is_anonymous }) {
   );
 }
 
+// Hard budget for the whole session bootstrap. Anything still running past
+// this gets abandoned and we drop to offline mode. Slightly higher than
+// BOOTSTRAP_API_TIMEOUT_MS so the api_me-specific timeout can fire and be
+// caught cleanly in the common case, but low enough that supabase.auth calls
+// (which have no client-side timeout of their own) can't strand us.
+const BOOTSTRAP_SESSION_BUDGET_MS = 4_000;
+
 async function bootstrap_session(dispatch) {
+  try {
+    await with_timeout(_bootstrap_session_inner(dispatch), BOOTSTRAP_SESSION_BUDGET_MS);
+  } catch (err) {
+    if (err?.is_network_error) {
+      // Either an api_me network failure that wasn't caught downstream, or
+      // the overall budget tripped (supabase.auth.* hanging). Either way:
+      // drop into offline mode and let the reconnect poll handle the catch-up.
+      console.warn('[bootstrap] session budget exceeded — falling back to offline mode');
+      login_from_cache_or_zero(dispatch, { is_anonymous: false });
+      start_reconnect_polling(dispatch);
+      return;
+    }
+    throw err;
+  }
+}
+
+async function _bootstrap_session_inner(dispatch) {
   const { data: { session } } = await supabase.auth.getSession();
   if (session) {
     try {
