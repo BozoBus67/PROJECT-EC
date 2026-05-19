@@ -1,14 +1,22 @@
-// Variant resolution. `extended/` (NSFW) and `cookie_clicker/` (SFW) mirror
-// each other; VITE_SFW picks which is active. In SFW mode, cookie_clicker/
-// takes priority; missing stems fall back to extended/. NSFW builds never
-// touch cookie_clicker/.
+// Variant resolution. Each variant has an asset folder under ../assets/.
+// VITE_VARIANT picks which is active; missing stems fall back through a
+// per-variant chain so we never leak NSFW imagery into a non-NSFW build.
 //
-// Not all asset categories are variant-aware. Clickbait ads (kept identical
-// between editions on purpose — the absurd-photo gag is the joke regardless
-// of edition) live in `assets/shared/` and are loaded directly by
+// Chains (priority-first → fallback):
+//   nsfw      → extended only
+//   sfw       → cookie_clicker → extended
+//   gemstone  → gemstone → cookie_clicker → extended
+//
+// Why the gemstone chain includes cookie_clicker: any stem missing from
+// gemstone/ falls back to the SFW asset before the NSFW one, so we don't have
+// to author every gemstone asset up front to keep gemstone builds clean.
+//
+// Not all asset categories are variant-aware. Clickbait ads (kept similar
+// shape between editions on purpose — the absurd-photo gag is the joke
+// regardless of edition) live in `assets/shared/` and are loaded directly by
 // main_body_utils.js, not through this file. UI chrome lives in `assets/ui/`.
 
-const SFW = import.meta.env.VITE_SFW === 'true';
+import { VARIANT } from './variant';
 
 const ext = {
   master_scroll_faces:           import.meta.glob('../assets/extended/master_scroll_faces/*',           { eager: true }),
@@ -22,11 +30,33 @@ const cc = {
   backgrounds:                   import.meta.glob('../assets/cookie_clicker/backgrounds/*',                   { eager: true }),
 };
 
-// For glob-iterating callers (pair_by_stem). In SFW mode both folders' modules
-// are spread; pair_by_stem iterates and the cookie_clicker entry overwrites
-// the extended one for any shared stem because of insertion order.
+const gem = {
+  master_scroll_faces:           import.meta.glob('../assets/gemstone/master_scroll_faces/*',           { eager: true }),
+  master_scroll_faces_kirkified: import.meta.glob('../assets/gemstone/master_scroll_faces_kirkified/*', { eager: true }),
+  backgrounds:                   import.meta.glob('../assets/gemstone/backgrounds/*',                   { eager: true }),
+};
+
+const FOLDERS = { extended: ext, cookie_clicker: cc, gemstone: gem };
+
+// Chain is ordered fallback-first → priority-last (matching insertion-order
+// spread semantics, where later entries overwrite earlier ones). Reversed
+// when doing priority-first single-asset lookup below.
+const CHAINS = {
+  nsfw:     ['extended'],
+  sfw:      ['extended', 'cookie_clicker'],
+  gemstone: ['extended', 'cookie_clicker', 'gemstone'],
+};
+
+const chain = CHAINS[VARIANT] ?? CHAINS.nsfw;
+
+// For glob-iterating callers (pair_by_stem). Each folder's modules are spread
+// in chain order so later folders override earlier ones on shared stems.
 function merged(category) {
-  return SFW ? { ...ext[category], ...cc[category] } : ext[category];
+  let result = {};
+  for (const folder of chain) {
+    result = { ...result, ...FOLDERS[folder][category] };
+  }
+  return result;
 }
 
 export const variant_modules = {
@@ -45,11 +75,11 @@ function lookup_in(modules, stem) {
 }
 
 // Single-asset lookup for direct importers (auth backgrounds, the cookie
-// image, etc.). SFW prefers cookie_clicker/, falls back to extended/.
+// image, etc.). Walks the chain priority-first (last folder in chain wins).
 export function variant_asset(category, stem) {
-  if (SFW) {
-    const sfw_hit = lookup_in(cc[category], stem);
-    if (sfw_hit) return sfw_hit;
+  for (let i = chain.length - 1; i >= 0; i--) {
+    const hit = lookup_in(FOLDERS[chain[i]][category], stem);
+    if (hit) return hit;
   }
-  return lookup_in(ext[category], stem);
+  return null;
 }

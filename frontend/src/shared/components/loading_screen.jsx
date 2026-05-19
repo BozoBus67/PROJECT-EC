@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { variant_asset } from '../variant_assets';
+import { IS_NSFW } from '../variant';
 
 const STUCK_THRESHOLD_MS = 15_000;
-const SFW = import.meta.env.VITE_SFW === 'true';
-const sfw_loading_bg = SFW ? variant_asset('backgrounds', 'loading_screen') : null;
+const variant_loading_bg = !IS_NSFW ? variant_asset('backgrounds', 'loading_screen') : null;
 
-// In SFW mode the cookie-clicker background is busy enough that grey body text
+// In non-NSFW variants the background is busy enough that grey body text
 // disappears into it. Swap to white text on a translucent grey rounded panel.
-const body_text_style = SFW
+const body_text_style = !IS_NSFW
   ? {
       color: '#fff',
       background: 'rgba(60,60,60,0.6)',
@@ -35,7 +35,7 @@ export default function Loading_Screen() {
       height: '100vh',
       justifyContent: 'center',
       alignItems: 'center',
-      background: sfw_loading_bg ? `url(${sfw_loading_bg}) center/cover` : '#1a1a2e',
+      background: variant_loading_bg ? `url(${variant_loading_bg}) center/cover` : '#1a1a2e',
       color: '#facc15',
       fontWeight: 'bold',
       fontSize: '18px',

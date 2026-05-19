@@ -4,12 +4,14 @@
 // here. Mechanics (costs, ELO bands, scroll → chess_elo) live elsewhere and
 // don't reference any of this. Strings only.
 //
-// Two editions: NSFW (default) and SFW (resume / portfolio build). Toggle
-// via VITE_SFW=true in .env or on Vercel — defaults to NSFW.
+// Three editions: NSFW (default), SFW (resume / portfolio build), and GEMSTONE
+// (a gem-themed parody). Selection comes from VITE_VARIANT — see variant.js.
 //
 // Scroll IDs below are the stable slugs from scroll_registry.js — mechanics-
 // side, never change. Only the values are swappable.
 // ─────────────────────────────────────────────────────────────────────────────
+
+import { VARIANT } from './variant';
 
 const NSFW = (() => {
   const QUANTITY_NAME = 'children trafficked';
@@ -102,7 +104,8 @@ const NSFW = (() => {
   };
 })();
 
-// SFW values — resume / portfolio edition.
+// SFW values — resume / portfolio edition. AD_TEXT keeps the clickbait gag
+// (different copy from NSFW, but the same "absurd HOT GIRLS ad" joke).
 const SFW = (() => {
   const QUANTITY_NAME = 'cookies';
   return {
@@ -194,7 +197,102 @@ const SFW = (() => {
   };
 })();
 
-const T = import.meta.env.VITE_SFW === 'true' ? SFW : NSFW;
+// GEMSTONE values — gem-mining themed edition. Every building is a mining-or-
+// refining step; every scroll character is a gem variant. Tier names walk up
+// the gem hierarchy from a Pebble to a Star Diamond.
+const GEMSTONE = (() => {
+  const QUANTITY_NAME = 'gemstones';
+  return {
+    QUANTITY_NAME,
+    BUILDING_NAMES: {
+      building_1:  'Pickaxe',
+      building_2:  'Apprentice Miner',
+      building_3:  'Mining Cart',
+      building_4:  'Tunnel Network',
+      building_5:  'Quarry',
+      building_6:  'Crystal Cave',
+      building_7:  'Geode Forge',
+      building_8:  'Gem Refinery',
+      building_9:  'Mithril Foundry',
+      building_10: 'Diamond Mine',
+      building_11: 'Star Sapphire Vein',
+      building_12: 'Cosmic Crystal Spire',
+      building_13: 'Singularity Lattice',
+    },
+    SCROLL_DISPLAY_NAMES: {
+      '6_7_kid':             'Sevenstone',
+      adolf_hitler:          'Obsidian Tyrant',
+      blurry_epstein:        'Shadow Crystal',
+      caseoh:                'Heavy Garnet',
+      charlie_kirk:          'Citrine Captain',
+      dexter:                'Bloodstone',
+      diddy:                 'Diamond Doublet',
+      doakes:                'Hematite Sergeant',
+      donald_trump:          'Tigereye Tycoon',
+      drake:                 'Onyx Lyric',
+      elon_musk:             'Meteorite Mogul',
+      freddy_fazbear:        'Animatronic Amber',
+      george_floyd:          'Black Pearl',
+      hillary_clinton:       'Pearl Strand',
+      ishowspeed:            'Velocity Quartz',
+      kai_cenat:             'Carnelian Streamer',
+      khaby_lame:            'Silent Sapphire',
+      mark_zuckerberg:       'Code Lapis',
+      mr_beast:              'Beryl of Plenty',
+      ninja_from_fortnite:   'Shuriken Spinel',
+      roy_lee:               "Roy's Ruby",
+      state_trooper_cop:     'Topaz Trooper',
+      stephen_hawking:       'Quasar Diamond',
+      tung_tung_tung_sahur:  'Drumstone',
+      walter_white:          'Heisenberg Quartz',
+    },
+    SCROLL_DESCRIPTIONS: {
+      '6_7_kid':             'Not yet implemented',
+      adolf_hitler:          'Not yet implemented',
+      blurry_epstein:        `${QUANTITY_NAME} per second multiplied by 1000`,
+      caseoh:                'Not yet implemented',
+      charlie_kirk:          'Not yet implemented',
+      dexter:                'Not yet implemented',
+      diddy:                 'Apprentice Miner, Mining Cart, and Tunnel Network production ×2500',
+      doakes:                'Not yet implemented',
+      donald_trump:          'Not yet implemented',
+      drake:                 'Not yet implemented',
+      elon_musk:             'Not yet implemented',
+      freddy_fazbear:        'Not yet implemented',
+      george_floyd:          'Unlocks dark mode',
+      hillary_clinton:       'Not yet implemented',
+      ishowspeed:            'Not yet implemented',
+      kai_cenat:             'Not yet implemented',
+      khaby_lame:            'Not yet implemented',
+      mark_zuckerberg:       'Not yet implemented',
+      mr_beast:              'Not yet implemented',
+      ninja_from_fortnite:   'Not yet implemented',
+      roy_lee:               'Not yet implemented',
+      state_trooper_cop:     'Unlocks light mode',
+      stephen_hawking:       'Not yet implemented',
+      tung_tung_tung_sahur:  'Not yet implemented',
+      walter_white:          'Not yet implemented',
+    },
+    AD_TEXT: 'GORGEOUS GEMSTONES NEAR YOU WANT TO SPARKLE!',
+    BAKERY_SUBSTITUTE_NAME: 'Vault',
+    EPSTEIN_BOT_NAME: 'Gem Master',
+    ACCOUNT_TIER_NAMES: {
+      account_tier_0: 'Pebble',
+      account_tier_1: 'Geode',
+      account_tier_2: 'Quartz',
+      account_tier_3: 'Topaz',
+      account_tier_4: 'Amethyst',
+      account_tier_5: 'Sapphire',
+      account_tier_6: 'Ruby',
+      account_tier_7: 'Emerald',
+      account_tier_8: 'Diamond',
+      account_tier_9: 'Star Diamond',
+    },
+  };
+})();
+
+const VARIANTS = { nsfw: NSFW, sfw: SFW, gemstone: GEMSTONE };
+const T = VARIANTS[VARIANT] ?? NSFW;
 
 export const QUANTITY_NAME          = T.QUANTITY_NAME;
 export const BUILDING_NAMES         = T.BUILDING_NAMES;
@@ -206,7 +304,7 @@ export const EPSTEIN_BOT_NAME       = T.EPSTEIN_BOT_NAME;
 export const ACCOUNT_TIER_NAMES     = T.ACCOUNT_TIER_NAMES;
 
 // Tier thresholds for owned-count → tier badge. Mechanics, not text — same in
-// both editions. Mirrored in backend/data/scrolls.py — keep both in sync.
+// all editions. Mirrored in backend/data/scrolls.py — keep both in sync.
 export const SCROLL_TIERS = [
   { min: 100, tier: 5 },
   { min: 25,  tier: 4 },

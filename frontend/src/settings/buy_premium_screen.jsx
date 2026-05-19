@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import toast from 'react-hot-toast';
 import { ACCOUNT_TIER_NAMES } from '../shared/constants';
+import { IS_NSFW } from '../shared/variant';
 import { tier_num } from '../shared/utils';
 import { update_premium_game_data } from '../shared/store/sessionSlice';
 import { api_buy_account_tier } from './api';
@@ -48,15 +49,14 @@ const TIER_PERKS = {
   ],
 };
 
-// SFW overrides tiers 6–9 with gemstone images (Diamond / Ruby / Amethyst /
-// Emerald) from cookie_clicker/tier_images/. Tiers 1–5 stay shared in ui/
-// since their imagery is already gem-neutral. NSFW reads everything from ui/.
-const SFW = import.meta.env.VITE_SFW === 'true';
-
+// Non-NSFW variants override tiers 6–9 with gemstone tier images (Diamond /
+// Ruby / Amethyst / Emerald) from cookie_clicker/tier_images/. Tiers 1–5 stay
+// shared in ui/ since their imagery is already gem-neutral. NSFW reads
+// everything from ui/.
 const TIER_IMAGES = Object.fromEntries(
   Array.from({ length: 9 }, (_, i) => {
     const n = i + 1;
-    const url = SFW && n >= 6
+    const url = !IS_NSFW && n >= 6
       ? new URL(`../assets/cookie_clicker/tier_images/tier_${n}.svg`, import.meta.url).href
       : new URL(`../assets/ui/tier_images/tier_${n}.svg`, import.meta.url).href;
     return [`account_tier_${n}`, url];

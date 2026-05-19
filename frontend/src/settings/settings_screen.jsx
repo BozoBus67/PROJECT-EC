@@ -9,9 +9,8 @@ import { stop_player } from '../music/audio_state';
 import { supabase } from '../shared/supabase_client';
 import { useTheme } from '../shared/theme';
 import { api_reset_game } from '../game';
+import { IS_NSFW } from '../shared/variant';
 import { api_get_my_discord, api_set_kirk_mode, api_set_theme } from './api';
-
-const SFW = import.meta.env.VITE_SFW === 'true';
 
 export default function Settings_Screen() {
   const dispatch = useDispatch();
@@ -53,7 +52,7 @@ function Settings_Screen_Body({ on_reset_click }) {
       {!is_anonymous && <Change_Login_Details_Button />}
       <Get_Discord_Button />
       <Theme_Picker />
-      {SFW ? <Kirk_Mode_Placeholder /> : <Kirk_Mode_Toggle />}
+      {IS_NSFW ? <Kirk_Mode_Toggle /> : <Kirk_Mode_Placeholder />}
       <Reset_Save_Button on_click={on_reset_click} />
       {!is_anonymous && <Log_Out_Button />}
     </>
@@ -175,9 +174,9 @@ function Kirk_Mode_Toggle() {
   );
 }
 
-// SFW edition has no Kirk Mode — render a disabled "???" button in its place
-// so the settings layout stays the same and players see something happens here
-// without revealing the underlying NSFW feature.
+// Non-NSFW editions have no Kirk Mode — render a disabled "???" button in
+// its place so the settings layout stays the same and players see something
+// happens here without revealing the underlying NSFW feature.
 function Kirk_Mode_Placeholder() {
   const theme = useTheme();
   return (
