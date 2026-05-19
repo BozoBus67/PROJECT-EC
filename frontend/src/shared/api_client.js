@@ -9,6 +9,8 @@
 //   • Errors: non-2xx responses become thrown Errors with .detail / .status.
 //   • Network failures: thrown as a generic "Cannot reach server" Error.
 import toast from 'react-hot-toast';
+import { store } from './store';
+import { set_online } from './store/sessionSlice';
 import { supabase } from './supabase_client';
 
 const base = () => import.meta.env.VITE_BACKEND_URL;
@@ -122,8 +124,16 @@ export function make_error(res, data) {
 function network_error() {
   const err = new Error('Error: Cannot reach server. Check your connection or try again.');
   err.detail = err.message;
+  err.is_network_error = true;
   return err;
 }
+
+// Backend reachability tracking. We flip is_online on each fetch attempt's
+// outcome so feature buttons that need the backend (gambling, auction,
+// checkins) can know whether to bother trying. Wrapping the fetch attempts
+// here keeps every call site automatically participating.
+function on_fetch_success() { store.dispatch(set_online(true)); }
+function on_fetch_network_failure() { store.dispatch(set_online(false)); }
 
 async function safe_json(res) {
   try { return await res.json(); }
@@ -152,7 +162,8 @@ export async function get(path, headers = {}) {
   return with_retry(async () => {
     let res;
     try { res = await tracked_fetch(`${base()}${path}`, { headers }); }
-    catch { throw network_error(); }
+    catch { on_fetch_network_failure(); throw network_error(); }
+    on_fetch_success();
     const data = await safe_json(res);
     if (!res.ok) throw make_error(res, data);
     return data;
@@ -167,7 +178,8 @@ export async function post(path, body, headers = {}) {
       headers: { ...headers, ...(body ? { 'Content-Type': 'application/json' } : {}) },
       body: body ? JSON.stringify(body) : undefined,
     });
-  } catch { throw network_error(); }
+  } catch { on_fetch_network_failure(); throw network_error(); }
+  on_fetch_success();
   const data = await safe_json(res);
   if (!res.ok) throw make_error(res, data);
   return data;
@@ -181,7 +193,8 @@ export async function patch(path, body, headers = {}) {
       headers: { ...headers, ...(body ? { 'Content-Type': 'application/json' } : {}) },
       body: body ? JSON.stringify(body) : undefined,
     });
-  } catch { throw network_error(); }
+  } catch { on_fetch_network_failure(); throw network_error(); }
+  on_fetch_success();
   const data = await safe_json(res);
   if (!res.ok) throw make_error(res, data);
   return data;
