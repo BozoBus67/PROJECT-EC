@@ -24,6 +24,10 @@ FastAPI service backing the Project EC frontend. Talks to Supabase (Postgres + a
 - **Translate exceptions to user-friendly `detail`** — Supabase exceptions are noisy and leak implementation details. Catch them at the endpoint boundary and re-raise as `HTTPException` with a short, user-readable `detail` string + an appropriate status code. The frontend renders `err.detail` directly.
 - **Service helpers handle the Supabase round-trip** — endpoints call `spend_tokens(user.id, n)`, not `supabase.table(...).select(...).update(...)` inline. Keeps the read-modify-write pattern in one place per resource.
 
+## Fail-loud exception
+
+The one place we deliberately use `.get(key, default)` is `services/migrations.py::ensure_user_data_complete` — that's the *one* function whose job is to reconcile missing keys. Every other endpoint expects the migration to have already run and crashes loud if it hasn't.
+
 ## Tests
 
 Run from the backend root with the venv active:
