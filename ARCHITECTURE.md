@@ -2,6 +2,8 @@
 
 # Architecture
 
+Subfolders under src with nontrivial complexity have their own READMEs, containing documentation specific to that subfolder. 
+
 ## Locality of Behavior for CSS and Tailwind
 
 CSS and Tailwind styling lives in the JSX it applies to. I decided that this design approach is superior to having a tree of named CSS classes for components to inherit from. There is a term for this — Locality of Behavior: the behavior of a unit of code should be obvious from reading that unit alone, not from tracing a cascade across other files.
