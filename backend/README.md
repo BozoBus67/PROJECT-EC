@@ -4,12 +4,6 @@
 
 FastAPI service backing the Project EC frontend. Talks to Supabase (Postgres + auth) and Stripe (purchases). Deployed on Render; the frontend talks to it over HTTPS.
 
-## Fail loud and early
-
-Same rule as the frontend: don't silently swallow problems. If `premium_game_data` is missing a key, raise a clear `HTTPException` so the frontend can surface it — don't paper over with `.get(key, 0)` defaults that hide the migration bug. If a Supabase call returns nothing where a row was expected, raise rather than returning `{"status": "error"}`. If you catch an exception, re-raise it as an `HTTPException` with a useful `detail` string; never swallow.
-
-The one place we deliberately use `.get(key, default)` is `services/migrations.py::ensure_user_data_complete` — that's the *one* function whose job is to reconcile missing keys. Every other endpoint expects the migration to have already run and crashes loud if it hasn't.
-
 ## Folder layout
 
 - `main.py` — FastAPI app entry. Loads `.env`, configures Stripe, registers every router, exposes `GET /` for health.
