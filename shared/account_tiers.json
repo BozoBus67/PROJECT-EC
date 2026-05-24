@@ -1,0 +1,12 @@
+[
+  { "id": "account_tier_0", "token_price": 0 },
+  { "id": "account_tier_1", "token_price": 10 },
+  { "id": "account_tier_2", "token_price": 25 },
+  { "id": "account_tier_3", "token_price": 100 },
+  { "id": "account_tier_4", "token_price": 1000 },
+  { "id": "account_tier_5", "token_price": 10000 },
+  { "id": "account_tier_6", "token_price": 67000 },
+  { "id": "account_tier_7", "token_price": 200000 },
+  { "id": "account_tier_8", "token_price": 750000 },
+  { "id": "account_tier_9", "token_price": 3000000 }
+]
