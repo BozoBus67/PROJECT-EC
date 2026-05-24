@@ -1,0 +1,36 @@
+{
+  "mastery_scrolls": {
+    "6_7_kid": {},
+    "adolf_hitler": {},
+    "blurry_epstein": {},
+    "caseoh": {},
+    "charlie_kirk": {},
+    "dexter": {},
+    "diddy": {},
+    "doakes": {},
+    "donald_trump": {},
+    "drake": {},
+    "elon_musk": {},
+    "freddy_fazbear": {},
+    "george_floyd": {},
+    "hillary_clinton": {},
+    "ishowspeed": {},
+    "kai_cenat": {},
+    "khaby_lame": {},
+    "mark_zuckerberg": {},
+    "mr_beast": {},
+    "ninja_from_fortnite": {},
+    "roy_lee": {},
+    "state_trooper_cop": {},
+    "stephen_hawking": {},
+    "tung_tung_tung_sahur": {},
+    "walter_white": {}
+  },
+  "scroll_tiers": [
+    { "min": 100, "tier": 5 },
+    { "min": 25,  "tier": 4 },
+    { "min": 10,  "tier": 3 },
+    { "min": 4,   "tier": 2 },
+    { "min": 1,   "tier": 1 }
+  ]
+}

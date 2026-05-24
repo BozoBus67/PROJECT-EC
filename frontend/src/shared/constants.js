@@ -12,6 +12,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { VARIANT } from './variant';
+import scrollsData from '../../../shared/scrolls.json';
 
 const NSFW = (() => {
   const QUANTITY_NAME = 'children trafficked';
@@ -304,11 +305,5 @@ export const EPSTEIN_BOT_NAME       = T.EPSTEIN_BOT_NAME;
 export const ACCOUNT_TIER_NAMES     = T.ACCOUNT_TIER_NAMES;
 
 // Tier thresholds for owned-count → tier badge. Mechanics, not text — same in
-// all editions. Mirrored in backend/data/scrolls.py — keep both in sync.
-export const SCROLL_TIERS = [
-  { min: 100, tier: 5 },
-  { min: 25,  tier: 4 },
-  { min: 10,  tier: 3 },
-  { min: 4,   tier: 2 },
-  { min: 1,   tier: 1 },
-];
+// all editions. Loaded from shared/scrolls.json (same source the backend reads).
+export const SCROLL_TIERS = scrollsData.scroll_tiers;
