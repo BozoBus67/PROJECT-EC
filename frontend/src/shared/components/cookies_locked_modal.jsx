@@ -3,15 +3,14 @@ import { useEscapeKey } from '../hooks/useEscapeKey';
 import Modal_Overlay from './modal_overlay';
 import { useTheme } from '../theme';
 
-export default function Cookies_Locked_Modal({ min, have, on_close }) {
+export default function Cookies_Locked_Modal({ min, on_close }) {
   const theme = useTheme();
   useEscapeKey(on_close);
   return (
     <Modal_Overlay panel_style={{ alignItems: 'center', textAlign: 'center', minWidth: '320px' }}>
       <h2 style={{ color: theme.accent, margin: 0 }}>🔒 Locked</h2>
       <p style={{ margin: 0 }}>
-        You need at least {min.toLocaleString()} {QUANTITY_NAME} to use this.
-        {have >= 100 && ` You have ${have.toLocaleString()}.`}
+        You need to reach at least {min.toLocaleString()} {QUANTITY_NAME} before unlocking this.
       </p>
       <button
         type="button"
