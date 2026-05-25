@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useEscapeKey, useOutsideClick, useTierGate } from '../shared/hooks';
+import { useEscapeKey, useOutsideClick } from '../shared/hooks';
 import { useTheme } from '../shared/theme';
 import {
   current_video_id,
@@ -9,7 +9,6 @@ import {
 } from './audio_state';
 
 export default function Music_Player() {
-  const { gate, lock_modal } = useTierGate(1);
   const [open, set_open] = useState(false);
   const [, force_update] = useState(0);
 
@@ -30,7 +29,7 @@ export default function Music_Player() {
 
   return (
     <div className="music-player-container" style={{ position: 'relative' }}>
-      <Music_Player_Button on_click={() => gate(() => set_open(!open))} />
+      <Music_Player_Button on_click={() => set_open(!open)} />
       {open && <Music_Player_Panel
         entries={playlist_entries}
         on_song_click={on_song_click}
@@ -38,7 +37,6 @@ export default function Music_Player() {
         api_error={yt_api_error}
         load_error={playlist_load_error}
       />}
-      {lock_modal}
     </div>
   );
 }
