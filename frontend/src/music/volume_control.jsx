@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { useEscapeKey, useOutsideClick } from '../shared/hooks';
+import { useEscapeKey, useOutsideClick, useTierGate } from '../shared/hooks';
 import { useTheme } from '../shared/theme';
 import { current_volume, set_current_volume } from './audio_state';
 
 export default function Volume_Control() {
+  const { gate, lock_modal } = useTierGate(4);
   const [open, set_open] = useState(false);
   const [value, set_value] = useState(() => current_volume);
 
@@ -18,8 +19,9 @@ export default function Volume_Control() {
 
   return (
     <div className="volume-control-container" style={{ position: 'relative' }}>
-      <Volume_Button on_click={() => set_open(!open)} value={value} />
+      <Volume_Button on_click={() => gate(() => set_open(!open))} value={value} />
       {open && <Volume_Panel value={value} on_change={handle_change} />}
+      {lock_modal}
     </div>
   );
 }
