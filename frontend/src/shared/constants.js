@@ -180,7 +180,7 @@ const SFW = (() => {
       tung_tung_tung_sahur:  'Not yet implemented',
       walter_white:          'Not yet implemented',
     },
-    AD_TEXT: 'HOT GIRLS IN YOUR AREA WANT TO MEET!',
+    AD_TEXT: 'FRESH COOKIES NEAR YOU WANT TO BAKE!',
     BAKERY_SUBSTITUTE_NAME: 'Bakery',
     EPSTEIN_BOT_NAME: 'Master Cookie',
     ACCOUNT_TIER_NAMES: {
