@@ -34,7 +34,7 @@ If a toast starts with Error: ... it's an error, if not then it's a feature.
 
 - Redux is used for cross-component server-backed state. `session.session_data`, `session.game_data`, `session.premium_game_data` are mirrored from the backend. Updates dispatch through `update_*` reducers in `shared/store/sessionSlice.js`. Stuff in the music folder is an exception. 
 - `useState` for local form / UI state — anything that doesn't need to persist or be shared.
-- localStorage is used to store Supabase auth stuff, and that's it. Don't use localStorage directly for app data, those always go through the backend, which then goes to Supabase.
+- localStorage holds the Supabase auth session, plus the boot cache in `shared/local_cache.js` (building catalog, account tiers, playlist, and the `game_data` / `premium_game_data` / `session_data` snapshots). That cache exists so the app renders while Render cold-starts; the backend is still authoritative and every write goes through it. Never call `localStorage` directly from a feature folder, add a key to `local_cache.js` instead so `clear_local_cache` keeps covering it.
 - Field-granular reducers are used for updating fields. The whole-object pattern (spread + override) is race-prone for async updates, see `shared/store/README.md`.
 
 ## Testing
