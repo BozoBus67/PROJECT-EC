@@ -1,5 +1,6 @@
 // localStorage cache for the bootstrap data — building catalog, account tier
-// list, and the user's game_data / premium_game_data / session_data snapshots.
+// list, music playlist, and the user's game_data / premium_game_data /
+// session_data snapshots.
 // Lets the game boot from cache when Render is cold-starting (or unreachable)
 // so players can still click the cookie and buy buildings while the backend
 // wakes up. See zero_state.js for the brand-new-player default that's used
@@ -17,6 +18,7 @@ const K = {
   game_data:         `${PREFIX}game_data`,
   premium_game_data: `${PREFIX}premium_game_data`,
   session_data:      `${PREFIX}session_data`,
+  playlist:          `${PREFIX}playlist`,
 };
 
 function safe_set(key, value) {
@@ -39,12 +41,14 @@ export const cache_account_tiers     = (v) => safe_set(K.account_tiers, v);
 export const cache_game_data         = (v) => safe_set(K.game_data, v);
 export const cache_premium_game_data = (v) => safe_set(K.premium_game_data, v);
 export const cache_session_data      = (v) => safe_set(K.session_data, v);
+export const cache_playlist          = (v) => safe_set(K.playlist, v);
 
 export const read_buildings         = () => safe_get(K.buildings);
 export const read_account_tiers     = () => safe_get(K.account_tiers);
 export const read_game_data         = () => safe_get(K.game_data);
 export const read_premium_game_data = () => safe_get(K.premium_game_data);
 export const read_session_data      = () => safe_get(K.session_data);
+export const read_playlist          = () => safe_get(K.playlist);
 
 export function clear_local_cache() {
   for (const key of Object.values(K)) {
