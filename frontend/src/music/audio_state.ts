@@ -7,6 +7,7 @@
 // between screens, but the player itself persists, so audio doesn't
 // stop on navigation.
 
+import { cache_playlist, read_playlist } from '../shared/local_cache';
 import { api_get_playlist } from './api';
 
 type Playlist_Entry = [title: string, video_id: string];
@@ -16,7 +17,7 @@ export let current_video_id: string | null = null;
 export let current_volume: number = 1.0; // 0–1; we * 100 when calling YT's setVolume.
 export let yt_api_error: string | null = null;
 
-export let playlist_entries: Playlist_Entry[] = [];
+export let playlist_entries: Playlist_Entry[] = hydrate_playlist();
 export let playlist_load_error: string | null = null;
 
 const subscribers = new Set<() => void>();
@@ -32,8 +33,28 @@ function notify(): void {
 
 // --- Playlist ---
 
-// Fetches once at app boot from App.jsx. Errors set playlist_load_error
-// so the panel can surface a real message instead of silently empty.
+// Read the last known playlist out of localStorage synchronously at module
+// load, mirroring the Redux bootstrap in shared/store/index.js. /youtube_playlist
+// is served by the backend, so on a cold start the fetch below is stuck behind
+// Render's spin-up along with every other backend call — without this, a
+// returning player stares at "Loading playlist…" for the whole wake-up even
+// though we already know what the songs are. Cached entries were sorted before
+// they were written, so there's nothing to re-sort here.
+//
+// The stored value is untrusted: safe_get survives malformed JSON but would
+// hand back whatever it parsed, so filter down to well-formed pairs rather
+// than assuming the shape.
+function hydrate_playlist(): Playlist_Entry[] {
+  const cached = read_playlist();
+  if (!Array.isArray(cached)) return [];
+  return cached.filter(
+    (e: any) => Array.isArray(e) && typeof e[0] === 'string' && typeof e[1] === 'string',
+  ) as Playlist_Entry[];
+}
+
+// Fetches once at app boot from App.jsx, refreshing whatever hydrate_playlist
+// restored. Errors set playlist_load_error so the panel can surface a real
+// message instead of silently empty.
 // Sorted alphabetically by title on load so the order is stable across
 // sessions, with songs whose title starts with a special character (`[`,
 // `(`, `!`, `"`, `★`, etc.) bucketed at the end — Unicode collation
@@ -51,10 +72,20 @@ export async function load_playlist(): Promise<void> {
         if (!a_normal && b_normal) return 1;
         return a.localeCompare(b);
       });
+    // Cache here, right after the sort, and nowhere else. shuffle_playlist
+    // mutates playlist_entries in place, so persisting on notify() or on
+    // unmount would write a shuffled order back and break the stable-order
+    // property described above.
+    cache_playlist(playlist_entries);
     playlist_load_error = null;
   } catch (e: any) {
-    playlist_load_error = e?.detail || 'Failed to load playlist.';
-    playlist_entries = [];
+    // Keep whatever hydrate_playlist restored. The overwhelmingly common
+    // failure here is the backend still cold-starting — precisely the case
+    // the cache exists to cover — so clearing the list would undo the whole
+    // point. Only report the failure when we had nothing to show anyway.
+    if (playlist_entries.length === 0) {
+      playlist_load_error = e?.detail || 'Failed to load playlist.';
+    }
   }
   notify();
 }
