@@ -27,7 +27,7 @@ function Hire_Me_Panel() {
         background: 'rgba(0,0,0,0.65)', borderRadius: '6px', padding: '4px 12px',
         textAlign: 'center',
       }}>
-        <span style={{ fontWeight: 'bold', fontSize: '45px', color: '#fff' }}>
+        <span style={{ fontWeight: 'bold', fontSize: '36px', color: '#fff' }}>
           HIRE ME!
         </span>
       </div>
