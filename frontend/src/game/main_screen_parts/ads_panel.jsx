@@ -2,11 +2,40 @@ import { useState, useEffect } from 'react';
 import * as Constants from '../../shared/constants';
 import { useTierGate } from '../../shared/hooks';
 import { useKirkifiedFace } from '../../shared/kirkified_faces';
+import { VARIANT } from '../../shared/variant';
 import { AD_ROTATION_MS } from '../constants';
 import { ADS, AD_CLOSE_BUTTON_CORNERS, random_next_ad_index } from './main_body_utils';
 import cc_bg from '../../assets/ui/cookie_clicker_background_art.jpg';
 
+// SFW is the resume/portfolio edition — the clickbait-ad gag doesn't belong
+// anywhere a recruiter might land, so we swap the whole middle panel for a
+// static "HIRE ME!" pitch instead of the rotating photo+caption ad.
 export default function Ads_Panel() {
+  return VARIANT === 'sfw' ? <Hire_Me_Panel /> : <Ad_Rotation_Panel />;
+}
+
+function Hire_Me_Panel() {
+  return (
+    <div style={{
+      flex: '1 1 0', height: '100%', position: 'relative', overflow: 'hidden',
+      backgroundImage: `url(${cc_bg})`, backgroundSize: 'cover', backgroundPosition: 'center',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px',
+    }}>
+      <div style={{ fontSize: '240px', lineHeight: 1, animation: 'ad-pulse 5s ease-in-out infinite' }}>😀</div>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
+        background: 'rgba(0,0,0,0.65)', borderRadius: '6px', padding: '4px 12px',
+        textAlign: 'center',
+      }}>
+        <span style={{ fontWeight: 'bold', fontSize: '15px', color: '#fff' }}>
+          HIRE ME!
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function Ad_Rotation_Panel() {
   const { gate, lock_modal } = useTierGate(2, 'close ads');
 
   const [index, set_index] = useState(() => Math.floor(Math.random() * ADS.length));
