@@ -8,6 +8,10 @@ locals {
       project_name = "extended-cookie-clicker"
       variant_id   = "sfw"
     }
+    sfw_new = {
+      project_name = "cookie-clicker-plus"
+      variant_id   = "sfw"
+    }
     gemstone = {
       project_name = "gemstone-clicker"
       variant_id   = "gemstone"
