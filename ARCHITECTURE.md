@@ -4,7 +4,7 @@
 
 ## Stack
 
-- **Frontend:** React + Vite + Tailwind. Deployed on Vercel as 3 `VITE_VARIANT`-driven variants (`project-ec` / `cookie-clicker-plus` / `gemstone-clicker`; the SFW variant also still serves at the legacy `extended-cookie-clicker` project during the rename transition). Also ships as a desktop app via Electron Forge.
+- **Frontend:** React + Vite + Tailwind. Deployed on Vercel as 3 `VITE_VARIANT`-driven variants (`project-ec` / `cookie-clicker-plus` / `gemstone-clicker`). Also ships as a desktop app via Electron Forge.
 - **Backend:** FastAPI (Python) on Render.
 - **Data:** Supabase (Postgres + auth).
 - **Payments:** Stripe.

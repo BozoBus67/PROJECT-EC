@@ -2,8 +2,20 @@ import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { store } from './shared/store';
 import { variant_asset } from './shared/variant_assets';
+import { VARIANT } from './shared/variant';
 import App from './App';
 import './index.css';
+
+// Tab title swap by edition. index.html carries a static placeholder; we
+// overwrite document.title here so the same bundle picks the right name
+// based on VITE_VARIANT at build time. Variants without a mapping fall
+// through to whatever index.html set.
+const TITLES = {
+  nsfw: 'Epstein Clicker',
+  sfw: 'Cookie Clicker Plus',
+  gemstone: 'Gemstone Clicker',
+};
+if (TITLES[VARIANT]) document.title = TITLES[VARIANT];
 
 // Favicon swap by edition. The `<link rel="icon">` tag in index.html has no
 // href; we set it here so the same bundle picks the correct asset based on

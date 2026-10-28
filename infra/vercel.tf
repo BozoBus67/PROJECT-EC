@@ -4,10 +4,6 @@ locals {
       project_name = "project-ec"
       variant_id   = "nsfw"
     }
-    sfw = {
-      project_name = "extended-cookie-clicker"
-      variant_id   = "sfw"
-    }
     sfw_new = {
       project_name = "cookie-clicker-plus"
       variant_id   = "sfw"
